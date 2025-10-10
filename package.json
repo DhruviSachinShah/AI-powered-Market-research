@@ -18,8 +18,8 @@
     "socket.io": "^4.7.4",
     "dotenv": "^16.3.1",
     "cors": "^2.8.5",
-    "langchain": "^0.0.212",
-    "@langchain/openai": "^0.0.14",
+    "langchain": "^0.3.35",
+    "@langchain/openai": "^0.3.0",
     "openai": "^4.20.1",
     "axios": "^1.6.2",
     "uuid": "^9.0.1"
