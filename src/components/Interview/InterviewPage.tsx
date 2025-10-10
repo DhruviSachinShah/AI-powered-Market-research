@@ -1,165 +1,151 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useInterviewStore } from '../stores/interviewStore';
-import ChatInterface from './Interview/ChatInterface';
-import ResponseInput from './Interview/ResponseInput';
-import Card from './ui/Card';
-import Button from './ui/Button';
-import LoadingSpinner from './ui/LoadingSpinner';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const InterviewPage: React.FC = () => {
-  const location = useLocation();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const {
-    isConnected,
-    isInterviewActive,
-    isLoading,
-    error,
-    startInterview,
-    endInterview,
-    resetInterview
-  } = useInterviewStore();
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [isInterviewComplete, setIsInterviewComplete] = useState(false);
 
-  const [hasStarted, setHasStarted] = useState(false);
+  // Sample questions - in a real app, these would come from an API
+  const questions = [
+    "Tell me about yourself and your background.",
+    "What are your greatest strengths?",
+    "Describe a challenging project you worked on.",
+    "Where do you see yourself in 5 years?",
+    "Do you have any questions for us?"
+  ];
 
-  useEffect(() => {
-    // Get interview data from navigation state
-    const interviewData = location.state as {
-      respondentName: string;
-      respondentEmail: string;
-      templateId: string;
-    };
-
-    if (!interviewData && !hasStarted) {
-      // Redirect to landing page if no data
-      navigate('/', { replace: true });
-      return;
+  const handleAnswerSubmit = (answer: string) => {
+    const newAnswers = [...answers, answer];
+    setAnswers(newAnswers);
+    
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      setIsInterviewComplete(true);
     }
-
-    if (interviewData && !hasStarted && isConnected) {
-      // Start the interview
-      startInterview(interviewData);
-      setHasStarted(true);
-    }
-  }, [location.state, hasStarted, isConnected, startInterview, navigate]);
-
-  const handleEndInterview = () => {
-    endInterview('User ended interview');
-    navigate('/dashboard');
   };
 
-  const handleInterviewComplete = () => {
-    // Navigate to results page when interview completes
-    // The interview ID will be available in the store
-    navigate('/dashboard');
+  const handleStartOver = () => {
+    setCurrentQuestion(0);
+    setAnswers([]);
+    setIsInterviewComplete(false);
   };
 
-  if (!isConnected) {
+  if (isInterviewComplete) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="large" />
-          <p className="mt-4 text-gray-600">Connecting to server...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md mx-auto">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold text-red-800 mb-2">
-              Interview Error
-            </h2>
-            <p className="text-red-600 mb-4">{error}</p>
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  resetInterview();
-                  navigate('/');
-                }}
-              >
-                Back to Home
-              </Button>
-              <Button
-                onClick={() => window.location.reload()}
-              >
-                Retry
-              </Button>
-            </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl w-full text-center">
+          <h1 className="text-3xl font-bold text-green-600 mb-4">
+            Interview Complete!
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Thank you for completing the interview. Your responses have been recorded.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={handleStartOver}
+              className="bg-blue-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Start Over
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="bg-gray-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-gray-700 transition-colors"
+            >
+              View Dashboard
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="text-blue-600 hover:underline font-medium"
+            >
+              Back to Home
+            </button>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">
-              AI Market Research Interview
-            </h1>
-            <p className="text-sm text-gray-600">
-              {isInterviewActive ? 'Interview in progress' : 'Preparing interview...'}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold text-gray-900">
+                Interview Session #{id}
+              </h1>
+              <span className="text-sm text-gray-500">
+                Question {currentQuestion + 1} of {questions.length}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              {questions[currentQuestion]}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Please provide a detailed answer. Take your time to think through your response.
             </p>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${
-              isConnected ? 'bg-green-500' : 'bg-red-500'
-            }`}></div>
-            <span className="text-sm text-gray-600">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
-            
-            {isInterviewActive && (
-              <Button
-                variant="outline"
-                size="small"
-                onClick={handleEndInterview}
-              >
-                End Interview
-              </Button>
-            )}
-          </div>
+
+          <AnswerForm onSubmit={handleAnswerSubmit} />
         </div>
       </div>
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Chat Interface */}
-          <div className="lg:col-span-2">
-            <ChatInterface />
-          </div>
-
-          {/* Response Input */}
-          <div className="lg:col-span-1">
-            <ResponseInput />
-          </div>
-        </div>
-      </div>
-
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="max-w-sm mx-auto">
-            <div className="text-center">
-              <LoadingSpinner size="large" />
-              <p className="mt-4 text-gray-600">
-                AI is thinking...
-              </p>
-            </div>
-          </Card>
-        </div>
-      )}
     </div>
+  );
+};
+
+interface AnswerFormProps {
+  onSubmit: (answer: string) => void;
+}
+
+const AnswerForm: React.FC<AnswerFormProps> = ({ onSubmit }) => {
+  const [answer, setAnswer] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (answer.trim()) {
+      onSubmit(answer.trim());
+      setAnswer('');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="answer" className="block text-sm font-medium text-gray-700 mb-2">
+          Your Answer:
+        </label>
+        <textarea
+          id="answer"
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          placeholder="Type your answer here..."
+          className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          required
+        />
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!answer.trim()}
+        >
+          Submit Answer
+        </button>
+      </div>
+    </form>
   );
 };
 
