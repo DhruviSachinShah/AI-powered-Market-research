@@ -1,5 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Square, RotateCcw, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mic, Square, RotateCcw, AlertCircle } from 'lucide-react';
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  start: () => void;
+  stop: () => void;
+  onresult: (event: any) => void;
+  onstart: () => void;
+  onend: () => void;
+  onerror: (event: any) => void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface SpeechToTextProps {
   onTranscriptionComplete: (transcript: string, duration: number, confidence: number) => void;
@@ -88,7 +108,7 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({
       }, 1000);
     };
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: { resultIndex: any; results: string | any[]; }) => {
       let finalTranscript = '';
       let interimTranscript = '';
       let totalConfidence = 0;
@@ -118,7 +138,7 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({
       }
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: { error: any; }) => {
       console.error('Speech recognition error:', event.error);
       setError(`Speech recognition error: ${event.error}`);
       stopListening();

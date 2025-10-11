@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text, Sphere, Box, Cylinder } from '@react-three/drei';
-import { Mesh, Vector3 } from 'three';
+import { OrbitControls, Sphere, Box, Cylinder } from '@react-three/drei';
+import { Mesh } from 'three';
 import type { AvatarState } from '../../types';
 
 interface Avatar3DProps {
@@ -139,7 +139,7 @@ const AvatarBody: React.FC = () => {
   );
 };
 
-const Avatar3D: React.FC<Avatar3DProps> = ({ avatarState, onAnimationComplete }) => {
+const Avatar3D: React.FC<Avatar3DProps> = ({ avatarState }) => {
   return (
     <div className="w-full h-full">
       <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>

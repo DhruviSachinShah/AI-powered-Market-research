@@ -2,7 +2,6 @@
 export const API_CONFIG = {
   // Base URL for the backend API
   BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:9999/api',
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:9999/api',
   
   // API endpoints
   ENDPOINTS: {

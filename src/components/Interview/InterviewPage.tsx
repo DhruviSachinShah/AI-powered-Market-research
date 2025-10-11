@@ -1,23 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SkipForward, RotateCcw, Volume2, VolumeX, Settings, Download } from 'lucide-react';
+import { SkipForward, RotateCcw, Volume2, VolumeX, Settings, Mic, StopCircle } from 'lucide-react';
 import Avatar3D from './Avatar3D';
-import SpeechToText from './SpeechToText';
-import type { InterviewQuestion, InterviewResponse, InterviewSession, AvatarState } from '../../types';
-import { interviewService } from '../../services/interviewService';
-import { getInterviewQuestionsWithFallback } from '../../services/stdInterviewQuesApi';
+import type { AvatarState } from '../../types';
 
-interface InterviewPageProps {
-  productId?: string;
+interface InterviewQuestion {
+  id: string;
+  question: string;
+  type: string;
+  category: string;
+  expectedDuration: number;
 }
 
-const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
-  // State management
+interface InterviewResponse {
+  questionId: string;
+  response: string;
+  transcript: string;
+  duration: number;
+  timestamp: Date;
+  confidence: number;
+  isComplete: boolean;
+}
+
+interface InterviewSession {
+  id: string;
+  startTime: Date;
+  endTime?: Date;
+  questions: InterviewQuestion[];
+  responses: InterviewResponse[];
+  status: 'active' | 'completed' | 'paused';
+}
+
+
+const InterviewPage: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [session, setSession] = useState<InterviewSession | null>(null);
-  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
-  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
+  const [currentTranscript, setCurrentTranscript] = useState('');
   const [avatarState, setAvatarState] = useState<AvatarState>({
     isSpeaking: false,
     isListening: false,
@@ -27,11 +46,10 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [speechRate, setSpeechRate] = useState(1);
   const [speechVolume, setSpeechVolume] = useState(0.8);
+  const [userResponses, setUserResponses] = useState<Record<string, string>>({});
+  const recognitionRef = useRef<any>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
 
-  // Refs
-  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  // Fallback interview questions (used when API fails)
   const fallbackQuestions: InterviewQuestion[] = [
     {
       id: '1',
@@ -70,61 +88,108 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
     }
   ];
 
-  // Load questions from database
-  const loadQuestions = async () => {
-    setIsLoadingQuestions(true);
-    try {
-      // Use provided product ID or fallback to default
-      const targetProductId = productId || '68e9ae828b2b525f106f9254';
-      
-      console.log(`Loading questions for product ID: ${targetProductId}`);
-      
-      const loadedQuestions = await getInterviewQuestionsWithFallback(
-        targetProductId,
-        fallbackQuestions,
-        120 // default duration in seconds
-      );
-      
-      setQuestions(loadedQuestions);
-      console.log(`Loaded ${loadedQuestions.length} questions for interview`);
-    } catch (error) {
-      console.error('Error loading questions:', error);
-      setQuestions(fallbackQuestions);
-    } finally {
-      setIsLoadingQuestions(false);
-    }
-  };
-
-  // Load questions on component mount
+  // Initialize speech synthesis
   useEffect(() => {
-    loadQuestions();
+    if ('speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis;
+    }
+
+    // Initialize speech recognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setCurrentTranscript(transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+        setAvatarState(prev => ({
+          ...prev,
+          isListening: false,
+          currentAnimation: 'idle'
+        }));
+      };
+
+      recognitionRef.current = recognition;
+    }
+
+    return () => {
+      if (synthRef.current) {
+        synthRef.current.cancel();
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
   }, []);
 
-  // Initialize session when questions are loaded
+  // Initialize session with real questions
   useEffect(() => {
-    if (questions.length > 0 && !session) {
-      const newSession: InterviewSession = {
-        id: `session_${Date.now()}`,
-        startTime: new Date(),
-        questions: questions,
-        responses: [],
-        status: 'active'
-      };
-      setSession(newSession);
-    }
-  }, [questions, session]);
+    const fetchQuestions = async () => {
+      try {
+        const res = await fetch('http://localhost:9999/api/stdiq', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-  // Text-to-speech functionality
+        if (!res.ok) throw new Error('Failed to fetch questions');
+        const data = await res.json();
+
+        const fetchedQuestions: InterviewQuestion[] =
+          ((data.data?.[0]?.questions) || []).map((q: string, index: number) => ({
+            id: `${index + 1}`,
+            question: q,
+            type: 'general',
+            category: `Category ${index + 1}`,
+            expectedDuration: 120,
+          }));
+
+        setSession({
+          id: `session_${Date.now()}`,
+          startTime: new Date(),
+          questions: fetchedQuestions,
+          responses: [],
+          status: 'active',
+        });
+      } catch (error) {
+        console.error('❌ Error fetching questions:', error);
+        setSession({
+          id: `session_${Date.now()}`,
+          startTime: new Date(),
+          questions: fallbackQuestions,
+          responses: [],
+          status: 'active',
+        });
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = speechRate;
       utterance.volume = speechVolume;
       utterance.pitch = 1;
-      
+
       utterance.onstart = () => {
         setAvatarState(prev => ({
           ...prev,
@@ -133,7 +198,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
           emotion: 'encouraging'
         }));
       };
-      
+
       utterance.onend = () => {
         setAvatarState(prev => ({
           ...prev,
@@ -142,22 +207,83 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
           emotion: 'neutral'
         }));
       };
-      
-      speechSynthesisRef.current = utterance;
+
+      // Store utterance reference for potential cancellation
       window.speechSynthesis.speak(utterance);
     }
   };
 
-  // Handle question progression
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setAvatarState(prev => ({
+        ...prev,
+        isSpeaking: false,
+        currentAnimation: 'idle'
+      }));
+    }
+  };
+
+  const startListening = () => {
+    if (recognitionRef.current && !isListening) {
+      setCurrentTranscript('');
+      recognitionRef.current.start();
+      setIsListening(true);
+      setAvatarState(prev => ({
+        ...prev,
+        isListening: true,
+        currentAnimation: 'listening',
+        emotion: 'concerned'
+      }));
+    }
+  };
+
+  // Auto-speak current question
+  useEffect(() => {
+    if (session && session.questions[currentQuestionIndex]) {
+      const currentQuestion = session.questions[currentQuestionIndex];
+      speakText(currentQuestion.question);
+    }
+  }, [currentQuestionIndex, session, speechRate, speechVolume]);
+
+  const stopListening = () => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+
+      // Save the response
+      if (currentTranscript.trim() && session) {
+        const questionId = session.questions[currentQuestionIndex].id;
+        setUserResponses(prev => ({
+          ...prev,
+          [questionId]: currentTranscript.trim()
+        }));
+      }
+    }
+  };
+
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
+    // Save current response if exists
+    if (currentTranscript.trim() && session) {
+      const questionId = session.questions[currentQuestionIndex].id;
+      setUserResponses(prev => ({
+        ...prev,
+        [questionId]: currentTranscript.trim()
+      }));
+    }
+
+    if (currentQuestionIndex < fallbackQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentTranscript('');
+      stopSpeaking();
     } else {
-      // Interview completed
+      // Complete interview
       if (session) {
-        const completedSession = { ...session, status: 'completed' as const, endTime: new Date() };
-        setSession(completedSession);
-        interviewService.saveSession(completedSession);
+        setSession({
+          ...session,
+          status: 'completed',
+          endTime: new Date()
+        });
       }
     }
   };
@@ -165,108 +291,69 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
+      setCurrentTranscript('');
+      stopSpeaking();
+
+      // Load previous response
+      const prevQuestionId = fallbackQuestions[currentQuestionIndex - 1].id;
+      setCurrentTranscript(userResponses[prevQuestionId] || '');
     }
   };
 
   const handleRestartInterview = () => {
     setCurrentQuestionIndex(0);
-    if (session) {
-      const restartedSession = { ...session, responses: [], status: 'active' as const };
-      setSession(restartedSession);
-      interviewService.saveSession(restartedSession);
+    setCurrentTranscript('');
+    setUserResponses({});
+    stopSpeaking();
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
     }
-    window.speechSynthesis.cancel();
-  };
-
-  const handleDownloadSession = () => {
     if (session) {
-      interviewService.downloadSession(session.id);
-    }
-  };
-
-  // Handle speech-to-text
-  const handleListeningStart = () => {
-    setIsListening(true);
-    setAvatarState(prev => ({
-      ...prev,
-      isListening: true,
-      currentAnimation: 'listening',
-      emotion: 'neutral'
-    }));
-  };
-
-  const handleListeningStop = () => {
-    setIsListening(false);
-    setAvatarState(prev => ({
-      ...prev,
-      isListening: false,
-      currentAnimation: 'idle',
-      emotion: 'neutral'
-    }));
-  };
-
-  const handleTranscriptionComplete = (transcript: string, duration: number, confidence: number) => {
-    if (session) {
-      const response: InterviewResponse = {
-        questionId: questions[currentQuestionIndex].id,
-        response: transcript,
-        transcript: transcript,
-        duration,
-        timestamp: new Date(),
-        confidence,
-        isComplete: true
-      };
-
-      const updatedSession = {
+      setSession({
         ...session,
-        responses: [...session.responses, response]
-      };
-
-      setSession(updatedSession);
-      // Auto-save session
-      interviewService.saveSession(updatedSession);
+        responses: [],
+        status: 'active',
+        startTime: new Date()
+      });
     }
   };
 
-  // Auto-speak current question
-  useEffect(() => {
-    if (session && questions[currentQuestionIndex]) {
-      const currentQuestion = questions[currentQuestionIndex];
-      speakText(currentQuestion.question);
+  const submitAllResponses = async () => {
+    console.log('Submitting all responses:', userResponses);
+
+    try {
+      const payload = {
+        interview: session?.id,
+        responses: userResponses
+      };
+
+      const res = await fetch('http://localhost:9999/api/stdiqres', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error('Failed to submit');
+      const data = await res.json();
+      console.log('✅ Responses submitted:', data);
+      alert('Interview submitted successfully!');
+    } catch (error) {
+      console.error('❌ Error submitting:', error);
+      alert('Failed to submit responses');
     }
-  }, [currentQuestionIndex, session, speechRate, speechVolume, questions]);
+  };
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
-
-  if (isLoadingQuestions) {
+  if (!session) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading interview questions...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  if (!session || !currentQuestion || questions.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Questions Available</h2>
-          <p className="text-gray-600 mb-4">Unable to load interview questions. Please try again later.</p>
-          <button
-            onClick={loadQuestions}
-            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const currentQuestion = session.questions[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / session.questions.length) * 100;
+  const isCompleted = session.status === 'completed';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -276,32 +363,20 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
           <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">AI Interview Session</h1>
-              <p className="text-sm text-gray-600">Question {currentQuestionIndex + 1} of {questions.length}</p>
+              <p className="text-sm text-gray-600">
+                Question {currentQuestionIndex + 1} of {session.questions.length}
+              </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleDownloadSession}
-                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-                title="Download Session Data"
-              >
-                <Download className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-                title="Settings"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-              <div className="text-sm text-gray-600">
-                {session.startTime.toLocaleTimeString()}
-              </div>
-            </div>
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
           </div>
-          
-          {/* Progress Bar */}
+
           <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-            <motion.div 
+            <motion.div
               className="bg-blue-600 h-2 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
@@ -312,112 +387,132 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 3D Avatar Section */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-xl p-6 h-96">
-              <Avatar3D avatarState={avatarState} />
-            </div>
-          </div>
-
-          {/* Controls and Question Section */}
-          <div className="space-y-6">
-            {/* Current Question */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-                  {currentQuestion.category}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {currentQuestion.expectedDuration}s expected
-                </span>
+        {!isCompleted ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Avatar Section */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-xl p-6 h-96">
+                <Avatar3D avatarState={avatarState} />
               </div>
-              
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                {currentQuestion.question}
-              </h3>
-              
-              <div className="flex items-center space-x-2">
+            </div>
+
+            {/* Controls Section */}
+            <div className="space-y-6">
+              {/* Current Question */}
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                    {currentQuestion.category}
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {currentQuestion.question}
+                </h3>
+
                 <button
-                  onClick={() => speakText(currentQuestion.question)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                  onClick={() => avatarState.isSpeaking ? stopSpeaking() : speakText(currentQuestion.question)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors w-full justify-center"
                 >
                   {avatarState.isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  <span>{avatarState.isSpeaking ? 'Stop' : 'Repeat'}</span>
+                  <span>{avatarState.isSpeaking ? 'Stop' : 'Repeat Question'}</span>
                 </button>
               </div>
-            </div>
 
-            {/* Speech-to-Text */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Your Response</h4>
-              <SpeechToText
-                onTranscriptionComplete={handleTranscriptionComplete}
-                isListening={isListening}
-                onListeningStart={handleListeningStart}
-                onListeningStop={handleListeningStop}
-                maxDuration={currentQuestion.expectedDuration + 60}
-                language="en-US"
-              />
-            </div>
+              {/* Response Input */}
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Your Response</h4>
 
-            {/* Navigation Controls */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex justify-between items-center">
-                <button
-                  onClick={handlePreviousQuestion}
-                  disabled={currentQuestionIndex === 0}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                >
-                  <SkipForward className="w-4 h-4 rotate-180" />
-                  <span>Previous</span>
-                </button>
+                <div className="mb-4">
+                  <textarea
+                    value={currentTranscript}
+                    onChange={(e) => setCurrentTranscript(e.target.value)}
+                    className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Your answer will appear here as you speak, or you can type it..."
+                  />
+                </div>
 
                 <button
-                  onClick={handleRestartInterview}
-                  className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors"
+                  onClick={isListening ? stopListening : startListening}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors w-full justify-center ${isListening
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                    }`}
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Restart</span>
-                </button>
-
-                <button
-                  onClick={handleNextQuestion}
-                  className="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-                >
-                  <span>{currentQuestionIndex === questions.length - 1 ? 'Finish' : 'Next'}</span>
-                  <SkipForward className="w-4 h-4" />
+                  {isListening ? <StopCircle className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  <span>{isListening ? 'Stop Recording' : 'Start Recording'}</span>
                 </button>
               </div>
-            </div>
 
-            {/* Session Summary */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Session Summary</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Questions Answered:</span>
-                  <span className="font-medium">{session.responses.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Duration:</span>
-                  <span className="font-medium">
-                    {Math.round((Date.now() - session.startTime.getTime()) / 1000 / 60)} min
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  <span className={`font-medium ${
-                    session.status === 'active' ? 'text-green-600' : 
-                    session.status === 'completed' ? 'text-blue-600' : 'text-yellow-600'
-                  }`}>
-                    {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                  </span>
+              {/* Navigation */}
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="flex justify-between items-center gap-2">
+                  <button
+                    onClick={handlePreviousQuestion}
+                    disabled={currentQuestionIndex === 0}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                  >
+                    <SkipForward className="w-4 h-4 rotate-180" />
+                    <span>Previous</span>
+                  </button>
+
+                  <button
+                    onClick={handleRestartInterview}
+                    className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={handleNextQuestion}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                  >
+                    <span>{currentQuestionIndex === session.questions.length - 1 ? 'Finish' : 'Next'}</span>
+                    <SkipForward className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          // Completion Screen
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+              <div className="text-6xl mb-4">🎉</div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Interview Completed!</h2>
+              <p className="text-gray-600 mb-8">Thank you for completing the interview.</p>
+
+              <div className="bg-gray-50 rounded-xl p-6 mb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Your Responses</h3>
+                <div className="space-y-4 max-h-96 overflow-y-auto text-left">
+                  {session.questions.map((q, idx) => (
+                    <div key={q.id} className="p-4 bg-white rounded-lg shadow">
+                      <p className="font-medium text-gray-900 mb-2">Q{idx + 1}: {q.question}</p>
+                      <p className="text-gray-700 pl-4 border-l-4 border-blue-500">
+                        {userResponses[q.id] || <em className="text-gray-400">No response</em>}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={handleRestartInterview}
+                  className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Start New Interview
+                </button>
+                <button
+                  onClick={submitAllResponses}
+                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                >
+                  Submit Responses
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Settings Modal */}
@@ -431,14 +526,14 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
             onClick={() => setShowSettings(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
               className="bg-white rounded-2xl p-6 w-full max-w-md mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Interview Settings</h3>
-              
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Settings</h3>
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -454,10 +549,10 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
                     className="w-full"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Speech Volume: {Math.round(speechVolume * 100)}%
+                    Volume: {Math.round(speechVolume * 100)}%
                   </label>
                   <input
                     type="range"
@@ -469,22 +564,23 @@ const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
                     className="w-full"
                   />
                 </div>
+
+                <div className="pt-4 border-t">
+                  <button
+                    onClick={() => speakText('Audio test - this is working!')}
+                    className="w-full px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm"
+                  >
+                    Test Audio
+                  </button>
+                </div>
               </div>
-              
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                >
-                  Save
-                </button>
-              </div>
+
+              <button
+                onClick={() => setShowSettings(false)}
+                className="mt-6 w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+              >
+                Close
+              </button>
             </motion.div>
           </motion.div>
         )}

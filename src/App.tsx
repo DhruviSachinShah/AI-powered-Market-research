@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
 import InterviewPage from "./components/Interview/InterviewPage";
 import InsightPage from "./components/Insight/InsightPage";
+import Admin from "./components/Admin/Admin";
 
 const App: React.FC = () => {
   return (
