@@ -39,6 +39,13 @@ http://localhost:5000/api/v1
 - `PUT /api/v1/followups/:id` - Update followup by ID
 - `DELETE /api/v1/followups/:id` - Delete followup by ID
 
+## Product Insights (AI-Powered)
+- `GET /api/product-insights` - Get all products with response counts and insights status
+- `GET /api/product-insights/:productId` - Get product insights by product ID
+- `POST /api/product-insights/generate/:productId` - Generate AI insights for a product
+- `DELETE /api/product-insights/:productId` - Delete product insights
+- `GET /api/product-insights/test/gemini` - Test Gemini API connection
+
 ## Standard Interview Questions (STDIQ)
 - `GET /api/v1/stdiq` - Get all standard interview questions
 - `GET /api/v1/stdiq/:quesId` - Get question by ID
@@ -139,6 +146,110 @@ http://localhost:9999/api/followups
     "interview": "INTERVIEW_ID",
     "followup_ques": "Would you be interested in a free trial of our security system?",
     "followup_response": "Yes, I would like to try it for 30 days"
+}
+
+## Product Insights Examples
+
+- Generate Product Insights (AI-Powered)
+
+POST http://localhost:5000/api/product-insights/generate/PRODUCT_ID
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Product insights generated successfully",
+  "data": {
+    "productInsights": {
+      "_id": "INSIGHTS_ID",
+      "product": "PRODUCT_ID",
+      "productReport": {
+        "generatedAt": "2024-01-15T10:30:00.000Z",
+        "productInfo": {
+          "name": "Smart Home Security System",
+          "description": "AI-powered home security system...",
+          "totalInterviews": 5
+        },
+        "insights": [
+          {
+            "question_text": "Security Concern Level (1-10 scale)",
+            "question_type": "rating",
+            "visualization_type": "bar_chart",
+            "chart_data": {
+              "labels": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+              "datasets": [
+                {
+                  "label": "Responses",
+                  "data": [0, 0, 1, 2, 3, 4, 5, 6, 2, 1],
+                  "backgroundColor": ["#3B82F6", "#3B82F6", "#3B82F6", "#3B82F6", "#3B82F6", "#F59E0B", "#F59E0B", "#F59E0B", "#EF4444", "#EF4444"]
+                }
+              ]
+            }
+          }
+        ],
+        "metadata": {
+          "totalQuestions": 5,
+          "totalResponses": 25,
+          "aiModel": "gemini-1.5-flash"
+        }
+      }
+    },
+    "aggregatedData": {
+      "productName": "Smart Home Security System",
+      "totalInterviews": 5,
+      "totalQuestions": 5,
+      "totalResponses": 25
+    }
+  }
+}
+```
+
+- Get Product Insights
+
+GET http://localhost:5000/api/product-insights/PRODUCT_ID
+
+- Get All Products with Insights Status
+
+GET http://localhost:5000/api/product-insights
+
+Response:
+```json
+{
+  "success": true,
+  "count": 3,
+  "data": [
+    {
+      "productId": "PRODUCT_ID_1",
+      "productName": "Smart Home Security System",
+      "interviewCount": 5,
+      "hasResponses": true,
+      "insightsGenerated": true,
+      "lastGenerated": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "productId": "PRODUCT_ID_2",
+      "productName": "Organic Protein Powder",
+      "interviewCount": 3,
+      "hasResponses": true,
+      "insightsGenerated": false,
+      "lastGenerated": null
+    }
+  ]
+}
+```
+
+- Test Gemini API Connection
+
+GET http://localhost:5000/api/product-insights/test/gemini
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "connected": true,
+    "message": "Gemini API connection successful"
+  }
 }
 ```
 

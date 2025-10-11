@@ -4,16 +4,32 @@ const productInsightsSchema = new mongoose.Schema({
   product: {
     type: String,
     ref: 'Product',
-    unique: true,
-    sparse: true,
-    default: null
+    required: true,
+    unique: true
   },
-  productReport: {
-    type: mongoose.Schema.Types.Mixed,
-    default: null
+  product_report: {
+    qualitative: {
+      type: String,
+      required: true
+    },
+    quantitative: [
+      {
+        question_text: String,
+        question_type: String,
+        visualization_type: String,
+        chart_data: {
+          labels: [String],
+          datasets: [
+            {
+              label: String,
+              data: [Number],
+              backgroundColor: [String]
+            }
+          ]
+        }
+      }
+    ]
   }
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
 export default mongoose.model('ProductInsights', productInsightsSchema);
