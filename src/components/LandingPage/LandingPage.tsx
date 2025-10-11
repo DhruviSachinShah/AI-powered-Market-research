@@ -18,9 +18,6 @@ const LandingPage = () => {
           <Link to="/products" className="hidden sm:block text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200">
             Products
           </Link>
-          <Link to="/insight" className="hidden sm:block text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200">
-            Dashboard
-          </Link>
           <Link 
             to="/admin" 
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:scale-105 text-white px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30"

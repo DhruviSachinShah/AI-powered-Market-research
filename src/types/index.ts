@@ -27,6 +27,20 @@ export interface Product {
   image?: string; // <-- Add this line
 }
 
+// Product for Insight Types
+export interface ProductForInsight {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl: string;
+  stock: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Interview Types
 export interface Interview {
   _id?: string;
