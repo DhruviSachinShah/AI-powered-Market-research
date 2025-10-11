@@ -1,16 +1,13 @@
 // API Configuration
 export const API_CONFIG = {
   // Base URL for the backend API
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:9999/api',
   
   // API endpoints
   ENDPOINTS: {
-    HEALTH: '/health',
-    INTERVIEW_RESPONSES: '/interview/responses',
-    INTERVIEW_RESPONSES_BATCH: '/interview/responses/batch',
-    INTERVIEW_SESSIONS: '/interview/sessions',
-    INTERVIEW_ANALYSIS: '/interview/sessions',
-    INTERVIEW_FEEDBACK: '/interview/feedback',
+    // Product endpoints
+    PRODUCTS: '/products',
+    PRODUCT_BY_ID: (productId: string) => `/products/${productId}`,
   },
   
   // Request configuration

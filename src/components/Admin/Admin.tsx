@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
-
-interface Product {
-  id: string;
-  prod_name: string;
-  category: string;
-  prod_desc: string;
-  prod_price: number;
-  target_audience: string;
-  image?: string;
-  createdAt: Date;
-}
+import React, { useState, useEffect } from 'react';
+import { productService } from '../../services';
+import type { Product } from '../../types';
 
 const Admin: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     prod_name: '',
     category: '',
@@ -30,6 +23,27 @@ const Admin: React.FC = () => {
     image: ''
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Load products on component mount
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await productService.getAllProducts();
+      if (response.success && response.data) {
+        setProducts(response.data);
+      } else {
+        console.error('Failed to load products:', response.message);
+      }
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = { prod_name: '', category: '', prod_desc: '', prod_price: '', target_audience: '', image: '' };
@@ -146,30 +160,50 @@ const Admin: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    console.log('Submitting form', formData);
     if (validateForm()) {
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        prod_name: formData.prod_name.trim(),
-        category: formData.category.trim(),
-        prod_desc: formData.prod_desc.trim(),
-        prod_price: parseFloat(formData.prod_price),
-        target_audience: formData.target_audience.trim(),
-        image: imagePreview || undefined,
-        createdAt: new Date()
-      };
-      
-      setProducts(prev => [newProduct, ...prev]);
-      setFormData({ prod_name: '', category: '', prod_desc: '', prod_price: '', target_audience: '', image: null });
-      setErrors({ prod_name: '', category: '', prod_desc: '', prod_price: '', target_audience: '', image: '' });
-      setImagePreview(null);
+      setSubmitting(true);
+      try {
+        const productData = {
+          prod_name: formData.prod_name.trim(),
+          category: formData.category.trim(),
+          prod_desc: formData.prod_desc.trim(),
+          prod_price: parseFloat(formData.prod_price),
+          target_audience: formData.target_audience.trim()
+        };
+
+        const response = await productService.createProduct(productData);
+        if (response.success && response.data) {
+          setProducts(prev => [response.data!, ...prev]);
+          setFormData({ prod_name: '', category: '', prod_desc: '', prod_price: '', target_audience: '', image: null });
+          setErrors({ prod_name: '', category: '', prod_desc: '', prod_price: '', target_audience: '', image: '' });
+          setImagePreview(null);
+        } else {
+          console.error('Failed to create product:', response.message);
+        }
+      } catch (error) {
+        console.error('Error creating product:', error);
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
-  const handleDeleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(product => product.id !== id));
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      const response = await productService.deleteProduct(id);
+      if (response.success) {
+        setProducts(prev => prev.filter(product => product._id !== id));
+      } else {
+        console.error('Failed to delete product:', response.message);
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
   };
 
   return (
@@ -340,9 +374,10 @@ const Admin: React.FC = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium"
+                disabled={submitting}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Add Product
+                {submitting ? 'Adding Product...' : 'Add Product'}
               </button>
             </form>
           </div>
@@ -353,7 +388,17 @@ const Admin: React.FC = () => {
               Products ({products.length})
             </h2>
             
-            {products.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-blue-500 mb-2">
+                  <svg className="animate-spin mx-auto h-8 w-8" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+                <p className="text-gray-500">Loading products...</p>
+              </div>
+            ) : products.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-gray-400 mb-2">
                   <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -366,7 +411,7 @@ const Admin: React.FC = () => {
             ) : (
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {products.map((product) => (
-                  <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                  <div key={product._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
                     <div className="flex gap-4">
                       {/* Product Image */}
                       {product.image && (
@@ -391,11 +436,11 @@ const Admin: React.FC = () => {
                                <p className="line-clamp-2"><span className="font-medium">Description:</span> {product.prod_desc}</p>
                              </div>
                              <p className="text-xs text-gray-400">
-                               Added: {product.createdAt.toLocaleDateString()} at {product.createdAt.toLocaleTimeString()}
+                               Added: {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'Unknown'} at {product.createdAt ? new Date(product.createdAt).toLocaleTimeString() : 'Unknown'}
                              </p>
                            </div>
                           <button
-                            onClick={() => handleDeleteProduct(product.id)}
+                            onClick={() => handleDeleteProduct(product._id || product._id)}
                             className="ml-4 text-red-600 hover:text-red-800 transition-colors flex-shrink-0"
                             title="Delete product"
                           >
