@@ -6,6 +6,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import mongoose from 'mongoose';
 import connectDB from './config/database';
 import { HealthService } from './services/healthService';
+import routes from './routes';
 
 // Load environment variables
 dotenv.config();
@@ -79,6 +80,7 @@ app.get('/health/detailed', async (req, res) => {
 });
 
 // API Routes
+app.use(routes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
