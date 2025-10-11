@@ -1,5 +1,10 @@
 // controllers/userController.js
 import User from '../models/users.models';
+import { Request, Response } from 'express';
+
+interface UserParams {
+  userId: string;
+}
 
 export const getAllUsers = async (req: any, res: any) => {
   try {
@@ -18,27 +23,32 @@ export const getAllUsers = async (req: any, res: any) => {
   }
 };
 
-export const getUserById = async (req: any, res: any) => {
+export const getUserById = async (req: Request<UserParams>, res: Response) => {
   try {
-    const user = await User.findOne({ user_name: req.params.userId });
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
-    res.status(200).json({
+
+    return res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Error fetching user',
-      error: error.message
+      message: "Error fetching user",
+      error: error.message,
     });
   }
 };
+
 
 export const createUser = async (req: any, res: any) => {
   try {
