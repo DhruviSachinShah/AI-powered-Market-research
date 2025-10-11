@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
+import dotenv from 'dotenv';
+dotenv.config();
 export interface ProductInsightData {
   question_text: string;
   question_type: string;
@@ -126,6 +127,13 @@ Return only valid JSON, no additional text.
           throw new Error('Each dataset must have a backgroundColor array');
       }
     }
+  }
+
+  async generateContentFromPrompt(prompt: string): Promise<string> {
+    const model = this.genAI.getGenerativeModel({ model: 'gemini-pro-latest' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text().trim();
   }
 
   async testConnection(): Promise<boolean> {

@@ -29,18 +29,30 @@ export const generateProductInsights = async (req: Request, res: Response) => {
     // Aggregate responses
     const aggregatedData = await aggregationService.aggregateResponsesByProduct(productId);
 
-    // Generate insights from Gemini
+    // Generate quantitative insights from Gemini
     const quantitativeInsights: ProductInsightData[] = await geminiService.generateProductInsights(
       aggregatedData.rawResponsesText
     );
 
     console.log('📊 Gemini quantitative insights:', quantitativeInsights);
 
+    // Generate a short qualitative summary (5-line)
+    const qualitativePrompt = `
+You are a product analyst. Based on the following interview responses for a product, write a concise qualitative summary in 5 lines, highlighting key trends, user sentiment, and notable feedback.
+
+INTERVIEW RESPONSES:
+${aggregatedData.rawResponsesText}
+
+Return only the summary text, no JSON or extra formatting.
+`;
+
+    const qualitativeSummary = await geminiService.generateContentFromPrompt(qualitativePrompt);
+
     // Prepare data to upsert
     const productInsightsData = {
       product: productId,
       product_report: {
-        qualitative: 'No qualitative insights yet', // optional, can extend later if you want qualitative insights
+        qualitative: qualitativeSummary || 'No qualitative insights generated',
         quantitative: quantitativeInsights,
         generatedAt: new Date().toISOString(),
         productInfo: {
