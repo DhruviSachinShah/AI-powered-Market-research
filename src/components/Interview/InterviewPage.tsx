@@ -323,7 +323,8 @@ const InterviewPage: React.FC = () => {
 
     try {
       const payload = {
-        interview: session?.id,
+        interview: "68e9af908b2b525f106f925a",
+        ques:"68e9afc78b2b525f106f925c",
         responses: userResponses
       };
 
