@@ -71,20 +71,20 @@ export interface InterviewQuestion {
   question: string;
   type: 'behavioral' | 'technical' | 'situational' | 'general';
   category: string;
-  expectedDuration: number; // in seconds
+  expectedDuration: number;
   followUpQuestions?: string[];
 }
 
 export interface InterviewResponse {
   questionId: string;
   response: string;
-  transcript: string; // Speech-to-text result
+  transcript: string;
   duration: number;
   timestamp: Date;
-  confidence?: number; // Speech recognition confidence score
+  confidence?: number;
   sentiment?: 'positive' | 'negative' | 'neutral';
   keywords?: string[];
-  isComplete: boolean; // Whether the response is complete
+  isComplete: boolean;
 }
 
 export interface InterviewSession {

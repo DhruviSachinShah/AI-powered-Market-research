@@ -5,13 +5,19 @@ import Avatar3D from './Avatar3D';
 import SpeechToText from './SpeechToText';
 import type { InterviewQuestion, InterviewResponse, InterviewSession, AvatarState } from '../../types';
 import { interviewService } from '../../services/interviewService';
-import { sendResponseWithRetry } from '../../services/interviewApi';
+import { getInterviewQuestionsWithFallback } from '../../services/stdInterviewQuesApi';
 
-const InterviewPage: React.FC = () => {
+interface InterviewPageProps {
+  productId?: string;
+}
+
+const InterviewPage: React.FC<InterviewPageProps> = ({ productId }) => {
   // State management
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [session, setSession] = useState<InterviewSession | null>(null);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [avatarState, setAvatarState] = useState<AvatarState>({
     isSpeaking: false,
     isListening: false,
@@ -25,8 +31,8 @@ const InterviewPage: React.FC = () => {
   // Refs
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Sample interview questions
-  const sampleQuestions: InterviewQuestion[] = [
+  // Fallback interview questions (used when API fails)
+  const fallbackQuestions: InterviewQuestion[] = [
     {
       id: '1',
       question: "Hello! Welcome to your interview. Could you please introduce yourself and tell us about your background?",
@@ -64,17 +70,49 @@ const InterviewPage: React.FC = () => {
     }
   ];
 
-  // Initialize session
+  // Load questions from database
+  const loadQuestions = async () => {
+    setIsLoadingQuestions(true);
+    try {
+      // Use provided product ID or fallback to default
+      const targetProductId = productId || '68e9ae828b2b525f106f9254';
+      
+      console.log(`Loading questions for product ID: ${targetProductId}`);
+      
+      const loadedQuestions = await getInterviewQuestionsWithFallback(
+        targetProductId,
+        fallbackQuestions,
+        120 // default duration in seconds
+      );
+      
+      setQuestions(loadedQuestions);
+      console.log(`Loaded ${loadedQuestions.length} questions for interview`);
+    } catch (error) {
+      console.error('Error loading questions:', error);
+      setQuestions(fallbackQuestions);
+    } finally {
+      setIsLoadingQuestions(false);
+    }
+  };
+
+  // Load questions on component mount
   useEffect(() => {
-    const newSession: InterviewSession = {
-      id: `session_${Date.now()}`,
-      startTime: new Date(),
-      questions: sampleQuestions,
-      responses: [],
-      status: 'active'
-    };
-    setSession(newSession);
+    loadQuestions();
   }, []);
+
+  // Initialize session when questions are loaded
+  useEffect(() => {
+    if (questions.length > 0 && !session) {
+      const newSession: InterviewSession = {
+        id: `session_${Date.now()}`,
+        startTime: new Date(),
+        questions: questions,
+        responses: [],
+        status: 'active'
+      };
+      setSession(newSession);
+    }
+  }, [questions, session]);
 
   // Text-to-speech functionality
   const speakText = (text: string) => {
@@ -112,7 +150,7 @@ const InterviewPage: React.FC = () => {
 
   // Handle question progression
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < sampleQuestions.length - 1) {
+    if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
       // Interview completed
@@ -146,33 +184,6 @@ const InterviewPage: React.FC = () => {
     }
   };
 
-  // Send response to backend
-  const sendResponseToBackend = async (response: InterviewResponse) => {
-    if (!session) return;
-    
-    try {
-      const currentQuestion = sampleQuestions[currentQuestionIndex];
-      const success = await sendResponseWithRetry(
-        response,
-        session.id,
-        currentQuestion.question,
-        currentQuestion.type,
-        currentQuestion.category
-      );
-      
-      if (success) {
-        console.log('Response sent to backend successfully');
-        // You could show a success notification here
-      } else {
-        console.warn('Failed to send response to backend after retries');
-        // You could show a warning notification here
-      }
-    } catch (error) {
-      console.error('Error sending response to backend:', error);
-      // You could show an error notification here
-    }
-  };
-
   // Handle speech-to-text
   const handleListeningStart = () => {
     setIsListening(true);
@@ -197,7 +208,7 @@ const InterviewPage: React.FC = () => {
   const handleTranscriptionComplete = (transcript: string, duration: number, confidence: number) => {
     if (session) {
       const response: InterviewResponse = {
-        questionId: sampleQuestions[currentQuestionIndex].id,
+        questionId: questions[currentQuestionIndex].id,
         response: transcript,
         transcript: transcript,
         duration,
@@ -214,29 +225,44 @@ const InterviewPage: React.FC = () => {
       setSession(updatedSession);
       // Auto-save session
       interviewService.saveSession(updatedSession);
-      
-      // Send to backend (we'll implement this next)
-      sendResponseToBackend(response);
     }
   };
 
   // Auto-speak current question
   useEffect(() => {
-    if (session && sampleQuestions[currentQuestionIndex]) {
-      const currentQuestion = sampleQuestions[currentQuestionIndex];
+    if (session && questions[currentQuestionIndex]) {
+      const currentQuestion = questions[currentQuestionIndex];
       speakText(currentQuestion.question);
     }
-  }, [currentQuestionIndex, session, speechRate, speechVolume]);
+  }, [currentQuestionIndex, session, speechRate, speechVolume, questions]);
 
-  const currentQuestion = sampleQuestions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / sampleQuestions.length) * 100;
+  const currentQuestion = questions[currentQuestionIndex];
+  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
-  if (!session || !currentQuestion) {
+  if (isLoadingQuestions) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading interview...</p>
+          <p className="text-gray-600">Loading interview questions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session || !currentQuestion || questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Questions Available</h2>
+          <p className="text-gray-600 mb-4">Unable to load interview questions. Please try again later.</p>
+          <button
+            onClick={loadQuestions}
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -250,7 +276,7 @@ const InterviewPage: React.FC = () => {
           <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">AI Interview Session</h1>
-              <p className="text-sm text-gray-600">Question {currentQuestionIndex + 1} of {sampleQuestions.length}</p>
+              <p className="text-sm text-gray-600">Question {currentQuestionIndex + 1} of {questions.length}</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -359,7 +385,7 @@ const InterviewPage: React.FC = () => {
                   onClick={handleNextQuestion}
                   className="flex items-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
                 >
-                  <span>{currentQuestionIndex === sampleQuestions.length - 1 ? 'Finish' : 'Next'}</span>
+                  <span>{currentQuestionIndex === questions.length - 1 ? 'Finish' : 'Next'}</span>
                   <SkipForward className="w-4 h-4" />
                 </button>
               </div>

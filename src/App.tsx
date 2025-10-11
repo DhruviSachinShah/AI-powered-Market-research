@@ -2,8 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
 import InterviewPage from "./components/Interview/InterviewPage";
-import DashboardPage from "./components/Insight/InsightPage";
-import Admin from "./components/Admin/Admin";
+import InsightPage from "./components/Insight/InsightPage";
 
 const App: React.FC = () => {
   return (
@@ -11,7 +10,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/interview" element={<InterviewPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/insight" element={<InsightPage />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </Router>

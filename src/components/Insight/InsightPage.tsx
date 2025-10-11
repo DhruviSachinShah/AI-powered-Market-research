@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const DashboardPage: React.FC = () => {
+const InsightPage: React.FC = () => {
   // Sample data - in a real app, this would come from an API
   const interviewStats = {
     totalInterviews: 5,
@@ -88,7 +88,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-900">Recent Interviews</h2>
             <Link
-              to="/interview/1"
+              to="/interview"
               className="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
             >
               Start New Interview
@@ -131,7 +131,7 @@ const DashboardPage: React.FC = () => {
             <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <Link
-                to="/interview/1"
+                to="/interview"
                 className="block w-full bg-blue-600 text-white text-center py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors"
               >
                 Start Practice Interview
@@ -182,4 +182,4 @@ const DashboardPage: React.FC = () => {
   );
 };
 
-export default DashboardPage;
+export default InsightPage;

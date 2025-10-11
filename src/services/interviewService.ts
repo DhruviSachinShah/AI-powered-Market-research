@@ -1,5 +1,4 @@
-import api from './api';
-import type { Interview, ApiResponse } from '../types';
+import type { InterviewSession } from '../types';
 
 class InterviewService {
   // Get all interviews
