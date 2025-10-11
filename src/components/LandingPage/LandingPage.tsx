@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MessageSquare, TrendingUp, Users, Zap, DollarSign, Clock, ArrowRight, Sparkles } from 'lucide-react';
 import { GridCanvas } from './GridCanvas';
+import iconLogo from '../../../public/icon.png';
 
 const LandingPage = () => {
   return (
@@ -9,9 +10,9 @@ const LandingPage = () => {
       <nav className="relative z-50 flex items-center justify-between px-6 lg:px-8 py-6 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center glow-primary">
-            <MessageSquare className="w-6 h-6 text-white" />
+            <img src={iconLogo} className="w-6 h-6 text-white" />
           </div>
-          <span className="font-bold text-xl">ResearchAI</span>
+          <span className="font-bold text-xl">InsightAi</span>
         </div>
         <div className="flex items-center gap-4">
           <Link to="/products" className="hidden sm:block text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200">

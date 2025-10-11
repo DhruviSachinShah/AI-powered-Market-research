@@ -19,8 +19,23 @@ const Admin: React.FC = () => {
       try {
         const res = await fetch('http://localhost:9999/api/products');
         if (!res.ok) throw new Error('Failed to fetch products');
-        const data: ProductForInsight[] = await res.json();
-        setProducts(data);
+        const json = await res.json();
+
+        console.log('Fetched products:', json);
+
+        // Normalize fields to match ProductForInsight type
+        const normalized: ProductForInsight[] = json.data.map((prod: any) => ({
+          id: prod._id,
+          name: prod.prod_name,
+          description: prod.prod_desc,
+          price: prod.prod_price,
+          category: prod.category,
+          createdAt: prod.createdAt,
+          stock: prod.stock || 0, // default to 0 if not provided
+          isActive: true, // default if API doesn't provide it
+        }));
+
+        setProducts(normalized); // ✅ Use normalized array
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Unknown error');
@@ -31,6 +46,7 @@ const Admin: React.FC = () => {
 
     fetchProducts();
   }, []);
+
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -59,13 +75,6 @@ const Admin: React.FC = () => {
 
   const handleProductClick = (product: ProductForInsight) => {
     navigate(`/insight?tab=product-insight&productId=${product.id}`);
-  };
-
-  const getStockStatus = (stock: number, isActive: boolean) => {
-    if (!isActive) return { text: 'Inactive', color: 'bg-gray-500' };
-    if (stock === 0) return { text: 'Out of Stock', color: 'bg-red-500' };
-    if (stock < 20) return { text: 'Low Stock', color: 'bg-yellow-500' };
-    return { text: 'In Stock', color: 'bg-green-500' };
   };
 
   const formatPrice = (price: number) => {
@@ -160,21 +169,12 @@ const Admin: React.FC = () => {
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => {
-            const stockStatus = getStockStatus(product.stock, product.isActive);
             return (
               <div
                 key={product.id}
                 onClick={() => handleProductClick(product)}
                 className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
               >
-                <div className="relative">
-                  <div
-                    className={`absolute top-4 right-4 px-3 py-1 rounded-full text-white text-xs font-semibold ${stockStatus.color}`}
-                  >
-                    {stockStatus.text}
-                  </div>
-                </div>
-
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-xl font-bold text-gray-900 line-clamp-1">{product.name}</h3>

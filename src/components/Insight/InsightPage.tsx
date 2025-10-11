@@ -19,7 +19,7 @@ const UsersIcon = () => (
 // --- INTERFACES ---
 interface Interview {
   _id: string;
-  userId: string;
+  user: string;
   product: string;
 }
 
@@ -37,7 +37,7 @@ const InsightPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const sampleProduct: ProductForInsight = {
-    id: '68ea0cf33b3a960b2b92d468',
+    id: '68e9aeab8b2b525f106f9256',
     name: 'Premium Wireless Headphones',
     description: 'High-quality wireless headphones with noise cancellation and 30-hour battery life.',
     price: 299.99,
@@ -64,6 +64,7 @@ const InsightPage: React.FC = () => {
         const res = await fetch('http://localhost:9999/api/interviews');
         if (!res.ok) throw new Error('Failed to fetch interviews');
         const result = await res.json();
+        console.log('Fetched interviews:', result);
         if (!Array.isArray(result.data)) throw new Error('Invalid format: expected an array');
         setInterviews(result.data);
       } catch (err: any) {
@@ -90,7 +91,7 @@ const InsightPage: React.FC = () => {
 
             // --- Fetch user ---
             try {
-              const userRes = await fetch(`http://localhost:9999/api/users/${interview.userId}`);
+              const userRes = await fetch(`http://localhost:9999/api/users/${interview.user}`);
               if (userRes.ok) {
                 const userData = await userRes.json();
                 userName =

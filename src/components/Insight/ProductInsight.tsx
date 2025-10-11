@@ -16,18 +16,17 @@ const ProductInsightPage: React.FC<ProductInsightPageProps> = ({ productId }) =>
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`http://localhost:9999/api/product-insights/generate/${productId}`, {
-          method: "POST",
+        const res = await fetch(`http://localhost:9999/api/product-insights/${productId}`, {
+          method: "GET",
           headers: { "Content-Type": "application/json" },
         });
 
         if (!res.ok) throw new Error("Failed to fetch product insights");
 
         const result = await res.json();
-        console.log("API response:", result);
 
         // ✅ Correctly access nested structure
-        const productReport = result?.data?.productInsights?.product_report;
+        const productReport = result?.data?.product_report;
 
         if (productReport) setInsights(productReport);
         else setError("No product insights found");
