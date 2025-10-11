@@ -69,3 +69,78 @@ All API responses follow this format:
 - `400` - Bad Request (validation errors)
 - `404` - Not Found
 - `500` - Internal Server Error
+
+
+
+```
+- user
+
+http://localhost:9999/api/users
+
+{"user_name": "Marcus Johnson", "user_type": "Fitness Instructor"}
+
+- product
+
+http://localhost:9999/api/products
+
+{
+  "prod_name": "Organic Protein Powder",
+  "category": "Health & Wellness",
+  "prod_desc": "Organic plant-based protein powder made from pea, hemp, and brown rice proteins. Non-GMO, gluten-free, with added probiotics and digestive enzymes. Available in vanilla, chocolate, and unflavored.",
+  "prod_price": 39.99,
+  "target_audience": "Health-conscious adults aged 25-45, fitness enthusiasts, vegetarians/vegans, environmentally aware consumers"
+}
+
+- interviews
+
+http://localhost:9999/api/interviews
+
+{
+    "user": "USER_ID",
+    "product": "PRODUCT_ID"
+}
+
+- stdiq
+
+http://localhost:9999/api/stdiq
+
+{
+    "product": "PRODUCT_ID",
+    "questions": [
+      "On a scale of 1-10, how concerned are you about home security?",
+      "How likely are you to purchase a smart home security system in the next 6 months?",
+      "What is your current monthly budget for home security (including monitoring fees)?",
+      "How comfortable are you with facial recognition technology in your home?",
+      "Which features are most important to you? (Rank top 3)"
+    ]
+}
+
+- stdiqres
+
+http://localhost:9999/api/stdiqres
+
+{
+    "interview": "INTERVIEW_ID",
+    "ques": "INTERVIEW_QUESTION_ID",
+    "responses": {
+      "question1": "8",
+      "question2": "7",
+      "question3": "$50-100",
+      "question4": "Very comfortable",
+      "question5": ["Motion sensors", "Facial recognition", "Cloud storage"]
+    }
+}
+
+- followups
+
+http://localhost:9999/api/followups
+
+{
+    "interview": "INTERVIEW_ID",
+    "followup_ques": "Would you be interested in a free trial of our security system?",
+    "followup_response": "Yes, I would like to try it for 30 days"
+}
+```
+
+
+
