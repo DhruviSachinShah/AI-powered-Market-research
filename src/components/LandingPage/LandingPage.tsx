@@ -14,10 +14,10 @@ const LandingPage = () => {
           <span className="font-bold text-xl">ResearchAI</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/interview" className="hidden sm:block text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200">
-            Demo
+          <Link to="/products" className="hidden sm:block text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200">
+            Products
           </Link>
-          <Link to="/dashboard" className="hidden sm:block text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200">
+          <Link to="/insight" className="hidden sm:block text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200">
             Dashboard
           </Link>
           <Link 
@@ -74,7 +74,7 @@ const LandingPage = () => {
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link 
-                  to="/dashboard" 
+                  to="/insight" 
                   className="bg-white border-2 border-gray-300 hover:border-indigo-500 hover:bg-indigo-50 hover:text-indigo-700 hover:scale-105 text-gray-700 px-8 py-4 rounded-full text-base font-semibold transition-all duration-300 inline-flex items-center gap-2 shadow-lg hover:shadow-indigo-500/20"
                 >
                   View Insights
