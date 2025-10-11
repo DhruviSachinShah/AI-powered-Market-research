@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkipForward, RotateCcw, Volume2, VolumeX, Settings, Mic, StopCircle, Check, Clock, User, Award, ChevronRight, X } from 'lucide-react';
-import Avatar3D from './Avatar3D';
+import BrainAnimation from './BrainAnimation';
 import type { AvatarState } from '../../types';
 
 interface InterviewQuestion {
@@ -349,74 +349,73 @@ const InterviewPage: React.FC = () => {
   const isCompleted = session.status === 'completed';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Professional Header */}
-      <div className="bg-white shadow-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <User className="w-6 h-6 text-white" />
+    <div className="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col overflow-hidden">
+      {/* Compact Professional Header */}
+      <div className="bg-white shadow-sm border-b border-gray-100 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6">
+          <div className="flex justify-between items-center py-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   AI Interview Session
                 </h1>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Clock className="w-4 h-4 text-gray-500" />
-                  <p className="text-sm text-gray-600">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-3 h-3 text-gray-500" />
+                  <p className="text-xs text-gray-600">
                     Question {currentQuestionIndex + 1} of {session.questions.length}
                   </p>
                 </div>
               </div>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowSettings(!showSettings)}
-              className="p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200"
-            >
-              <Settings className="w-6 h-6" />
-            </motion.button>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="pb-6">
-            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden shadow-inner">
-              <motion.div
-                className="h-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-              />
+            <div className="flex items-center space-x-2">
+              {/* Compact Progress Bar */}
+              <div className="w-32 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+              >
+                <Settings className="w-4 h-4" />
+              </motion.button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10">
+      <div className="flex-1 max-w-7xl mx-auto px-4 lg:px-6 py-4 overflow-hidden">
         {!isCompleted ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Avatar Section - Enhanced */}
-            <div className="lg:col-span-2">
+          <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Avatar Section - Left Side */}
+            <div className="lg:col-span-7 flex flex-col">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-3xl shadow-2xl p-8 h-[500px] relative overflow-hidden"
+                className="bg-white rounded-2xl shadow-lg p-4 flex-1 relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50" />
-                <div className="relative z-10 h-full">
-                  <Avatar3D avatarState={avatarState} />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-purple-50/30" />
+                <div className="relative z-10 h-full flex items-center justify-center">
+                  <BrainAnimation avatarState={avatarState} />
                 </div>
                 
                 {/* Status Indicator */}
-                <div className="absolute top-6 right-6 z-20">
+                <div className="absolute top-3 right-3 z-20">
                   <motion.div
                     animate={{
                       scale: avatarState.isSpeaking || avatarState.isListening ? [1, 1.1, 1] : 1,
                     }}
                     transition={{ duration: 1, repeat: Infinity }}
-                    className={`px-4 py-2 rounded-full text-sm font-medium shadow-lg ${
+                    className={`px-3 py-1 rounded-full text-xs font-medium shadow-md ${
                       avatarState.isSpeaking 
                         ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
                         : avatarState.isListening
@@ -430,26 +429,26 @@ const InterviewPage: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Controls Section - Enhanced */}
-            <div className="space-y-6">
+            {/* Controls Section - Right Side */}
+            <div className="lg:col-span-5 flex flex-col space-y-3">
               {/* Current Question Card */}
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100"
+                className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 flex-shrink-0"
               >
-                <div className="flex items-center justify-between mb-5">
-                  <span className="px-4 py-1.5 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 text-sm font-semibold rounded-full">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 text-xs font-semibold rounded-full">
                     {currentQuestion.category}
                   </span>
-                  <span className="text-sm text-gray-500 flex items-center">
-                    <Clock className="w-4 h-4 mr-1" />
+                  <span className="text-xs text-gray-500 flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
                     ~{Math.floor(currentQuestion.expectedDuration / 60)}m
                   </span>
                 </div>
 
-                <h3 className="text-lg font-semibold text-gray-900 mb-6 leading-relaxed">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 leading-relaxed line-clamp-3">
                   {currentQuestion.question}
                 </h3>
 
@@ -457,9 +456,9 @@ const InterviewPage: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => avatarState.isSpeaking ? stopSpeaking() : speakText(currentQuestion.question)}
-                  className="flex items-center justify-center space-x-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 w-full shadow-lg font-medium"
+                  className="flex items-center justify-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 w-full shadow-md text-sm font-medium"
                 >
-                  {avatarState.isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  {avatarState.isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   <span>{avatarState.isSpeaking ? 'Stop Audio' : 'Repeat Question'}</span>
                 </motion.button>
               </motion.div>
@@ -469,20 +468,20 @@ const InterviewPage: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100"
+                className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 flex-1 flex flex-col"
               >
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mr-3">
-                    <Mic className="w-4 h-4 text-white" />
+                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-md flex items-center justify-center mr-2">
+                    <Mic className="w-3 h-3 text-white" />
                   </div>
                   Your Response
                 </h4>
 
-                <div className="mb-4">
+                <div className="flex-1 flex flex-col">
                   <textarea
                     value={currentTranscript}
                     onChange={(e) => setCurrentTranscript(e.target.value)}
-                    className="w-full h-40 p-4 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none text-gray-800 placeholder-gray-400"
+                    className="flex-1 min-h-[120px] p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none text-gray-800 placeholder-gray-400 text-sm"
                     placeholder="Click 'Start Recording' to speak, or type your answer here..."
                   />
                   {currentTranscript && (
@@ -496,13 +495,13 @@ const InterviewPage: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={isListening ? stopListening : startListening}
-                  className={`flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl transition-all duration-200 w-full font-medium shadow-lg ${
+                  className={`mt-3 flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg transition-all duration-200 w-full font-medium shadow-md text-sm ${
                     isListening
                       ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white'
                       : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
                   }`}
                 >
-                  {isListening ? <StopCircle className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  {isListening ? <StopCircle className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                   <span>{isListening ? 'Stop Recording' : 'Start Recording'}</span>
                 </motion.button>
               </motion.div>
@@ -512,17 +511,17 @@ const InterviewPage: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100"
+                className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 flex-shrink-0"
               >
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handlePreviousQuestion}
                     disabled={currentQuestionIndex === 0}
-                    className="flex flex-col items-center justify-center space-y-2 px-4 py-4 bg-gradient-to-br from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed text-gray-700 disabled:text-gray-400 rounded-2xl transition-all duration-200 font-medium"
+                    className="flex flex-col items-center justify-center space-y-1 px-3 py-3 bg-gradient-to-br from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 disabled:from-gray-50 disabled:to-gray-100 disabled:cursor-not-allowed text-gray-700 disabled:text-gray-400 rounded-xl transition-all duration-200 font-medium"
                   >
-                    <SkipForward className="w-5 h-5 rotate-180" />
+                    <SkipForward className="w-4 h-4 rotate-180" />
                     <span className="text-xs">Previous</span>
                   </motion.button>
 
@@ -530,9 +529,9 @@ const InterviewPage: React.FC = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleRestartInterview}
-                    className="flex flex-col items-center justify-center space-y-2 px-4 py-4 bg-gradient-to-br from-yellow-100 to-orange-100 hover:from-yellow-200 hover:to-orange-200 text-yellow-700 rounded-2xl transition-all duration-200 font-medium"
+                    className="flex flex-col items-center justify-center space-y-1 px-3 py-3 bg-gradient-to-br from-yellow-100 to-orange-100 hover:from-yellow-200 hover:to-orange-200 text-yellow-700 rounded-xl transition-all duration-200 font-medium"
                   >
-                    <RotateCcw className="w-5 h-5" />
+                    <RotateCcw className="w-4 h-4" />
                     <span className="text-xs">Restart</span>
                   </motion.button>
 
@@ -540,9 +539,9 @@ const InterviewPage: React.FC = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleNextQuestion}
-                    className="flex flex-col items-center justify-center space-y-2 px-4 py-4 bg-gradient-to-br from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-2xl transition-all duration-200 font-medium shadow-lg"
+                    className="flex flex-col items-center justify-center space-y-1 px-3 py-3 bg-gradient-to-br from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all duration-200 font-medium shadow-md"
                   >
-                    {currentQuestionIndex === session.questions.length - 1 ? <Check className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    {currentQuestionIndex === session.questions.length - 1 ? <Check className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                     <span className="text-xs">{currentQuestionIndex === session.questions.length - 1 ? 'Finish' : 'Next'}</span>
                   </motion.button>
                 </div>
@@ -550,51 +549,53 @@ const InterviewPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          // Completion Screen - Enhanced
+          // Completion Screen - Compact
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-5xl mx-auto"
+            className="h-full flex flex-col overflow-hidden"
           >
-            <div className="bg-white rounded-3xl shadow-2xl p-12 text-center border border-gray-100">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
-              >
-                <Award className="w-12 h-12 text-white" />
-              </motion.div>
+            <div className="bg-white rounded-2xl shadow-lg p-6 flex-1 flex flex-col border border-gray-100 overflow-hidden">
+              <div className="text-center mb-6 flex-shrink-0">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                  className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+                >
+                  <Award className="w-8 h-8 text-white" />
+                </motion.div>
 
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                Interview Completed!
-              </h2>
-              <p className="text-gray-600 text-lg mb-10">
-                Excellent work! Your responses have been recorded successfully.
-              </p>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                  Interview Completed!
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Excellent work! Your responses have been recorded successfully.
+                </p>
+              </div>
 
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-10 border border-blue-100">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-center">
-                  <Check className="w-6 h-6 mr-2 text-green-600" />
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 mb-6 border border-blue-100 flex-1 flex flex-col overflow-hidden">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-5 h-5 mr-2 text-green-600" />
                   Your Responses Summary
                 </h3>
-                <div className="space-y-5 max-h-[500px] overflow-y-auto text-left px-4">
+                <div className="space-y-3 flex-1 overflow-y-auto text-left pr-2">
                   {session.questions.map((q, idx) => (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
                       key={q.id}
-                      className="p-6 bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200"
+                      className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
                     >
-                      <div className="flex items-start space-x-3 mb-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-white font-bold text-sm">Q{idx + 1}</span>
+                      <div className="flex items-start space-x-3 mb-2">
+                        <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded-md flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold text-xs">Q{idx + 1}</span>
                         </div>
-                        <p className="font-semibold text-gray-900 leading-relaxed">{q.question}</p>
+                        <p className="font-semibold text-gray-900 leading-relaxed text-sm">{q.question}</p>
                       </div>
-                      <div className="pl-11">
-                        <p className="text-gray-700 leading-relaxed pl-4 border-l-4 border-blue-500 bg-blue-50/50 p-3 rounded-r-lg">
+                      <div className="pl-9">
+                        <p className="text-gray-700 leading-relaxed text-sm pl-3 border-l-2 border-blue-500 bg-blue-50/50 p-2 rounded-r-md">
                           {userResponses[q.id] || <em className="text-gray-400">No response recorded</em>}
                         </p>
                       </div>
@@ -603,23 +604,23 @@ const InterviewPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center gap-3 flex-shrink-0">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleRestartInterview}
-                  className="px-8 py-4 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg flex items-center space-x-2"
+                  className="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg transition-all duration-200 font-medium shadow-md flex items-center space-x-2 text-sm"
                 >
-                  <RotateCcw className="w-5 h-5" />
+                  <RotateCcw className="w-4 h-4" />
                   <span>Start New Interview</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={submitAllResponses}
-                  className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg flex items-center space-x-2"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 font-medium shadow-md flex items-center space-x-2 text-sm"
                 >
-                  <Check className="w-5 h-5" />
+                  <Check className="w-4 h-4" />
                   <span>Submit Responses</span>
                 </motion.button>
               </div>
@@ -628,7 +629,7 @@ const InterviewPage: React.FC = () => {
         )}
       </div>
 
-      {/* Settings Modal - Enhanced */}
+      {/* Settings Modal - Compact */}
       <AnimatePresence>
         {showSettings && (
           <motion.div
@@ -642,26 +643,26 @@ const InterviewPage: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl"
+              className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Audio Settings
                 </h3>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowSettings(false)}
-                  className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-1.5 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-4 h-4" />
                 </motion.button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
                     Speech Rate: <span className="text-blue-600">{speechRate}x</span>
                   </label>
                   <input
@@ -671,16 +672,16 @@ const InterviewPage: React.FC = () => {
                     step="0.1"
                     value={speechRate}
                     onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
-                    className="w-full h-3 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600"
+                    className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
                     <span>Slower</span>
                     <span>Faster</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
                     Volume: <span className="text-blue-600">{Math.round(speechVolume * 100)}%</span>
                   </label>
                   <input
@@ -690,22 +691,22 @@ const InterviewPage: React.FC = () => {
                     step="0.1"
                     value={speechVolume}
                     onChange={(e) => setSpeechVolume(parseFloat(e.target.value))}
-                    className="w-full h-3 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600"
+                    className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
                     <span>Quiet</span>
                     <span>Loud</span>
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-200">
+                <div className="pt-4 border-t border-gray-200">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => speakText('Audio test - this is working perfectly!')}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all duration-200 font-medium shadow-lg flex items-center justify-center space-x-2"
+                    className="w-full px-3 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg transition-all duration-200 font-medium shadow-md flex items-center justify-center space-x-2 text-sm"
                   >
-                    <Volume2 className="w-5 h-5" />
+                    <Volume2 className="w-4 h-4" />
                     <span>Test Audio</span>
                   </motion.button>
                 </div>
@@ -715,7 +716,7 @@ const InterviewPage: React.FC = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setShowSettings(false)}
-                className="mt-6 w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg"
+                className="mt-4 w-full px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 font-medium shadow-md text-sm"
               >
                 Close Settings
               </motion.button>
