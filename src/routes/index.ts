@@ -5,6 +5,7 @@ import interviewRoutes from './interviews.routes';
 import followupRoutes from './followup.routes';
 import stdiqRoutes from './stdiq.routes';
 import stdiqresRoutes from './stdiqres.routes';
+import productInsightsRoutes from './productInsights.routes';
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use(`${API_PREFIX}/interviews`, interviewRoutes);
 router.use(`${API_PREFIX}/followups`, followupRoutes);
 router.use(`${API_PREFIX}/stdiq`, stdiqRoutes);
 router.use(`${API_PREFIX}/stdiqres`, stdiqresRoutes);
+router.use(`${API_PREFIX}/product-insights`, productInsightsRoutes);
 
 export default router;

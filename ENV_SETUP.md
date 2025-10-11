@@ -15,8 +15,9 @@ MONGODB_URI=mongodb://localhost:27017/market-research
 # Frontend Configuration
 FRONTEND_URL=http://localhost:3000
 
-# AI Service Configuration (if needed)
+# AI Service Configuration
 OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 ## Health Check Endpoints
