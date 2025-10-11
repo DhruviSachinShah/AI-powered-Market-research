@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
 import { MessageSquare, TrendingUp, Users, Zap, DollarSign, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { MessageSquare, TrendingUp, Users, Zap, DollarSign, Clock } from 'lucide-react';
 
+export default function LandingPage() {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
@@ -45,7 +48,7 @@ export default function LandingPage() {
               Start Free Interview
             </Link>
             <Link 
-              to="/insight" 
+              to="/dashboard" 
               className="bg-white border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-full text-base font-semibold hover:border-gray-400 transition"
             >
               View Insights
@@ -394,7 +397,7 @@ export default function LandingPage() {
               Start Your Free Trial
             </Link>
             <Link 
-              to="/insight" 
+              to="/dashboard" 
               className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/10 transition"
             >
               View Dashboard
@@ -452,7 +455,7 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 text-sm">©️ 2024 ResearchAI. All rights reserved.</p>
+            <p className="text-gray-400 text-sm">© 2024 ResearchAI. All rights reserved.</p>
             <div className="flex gap-6 text-sm text-gray-400">
               <a href="#" className="hover:text-white transition">Privacy</a>
               <a href="#" className="hover:text-white transition">Terms</a>
