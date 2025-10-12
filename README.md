@@ -213,7 +213,6 @@ npm run preview
 - Edge 90+
 
 ## Contributing
-
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
@@ -226,4 +225,5 @@ MIT License - see LICENSE file for details.
 ## Support
 
 For support and questions, please open an issue in the repository.
+
 
