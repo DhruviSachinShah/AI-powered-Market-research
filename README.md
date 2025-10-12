@@ -221,9 +221,9 @@ npm run preview
 5. Submit a pull request
 
 ## License
-
 MIT License - see LICENSE file for details.
 
 ## Support
 
 For support and questions, please open an issue in the repository.
+
