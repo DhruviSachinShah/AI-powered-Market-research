@@ -1,5 +1,38 @@
 // controllers/followupController.js
 import Followup from '../models/followup.models';
+import { FollowupService } from '../services/followupService';
+
+const followupService = new FollowupService();
+export const generateFollowup = async (req: any, res: any) => {
+  try {
+    const { interviewId, currentQuestion, userResponse } = req.body;
+
+    if (!interviewId || !currentQuestion || !userResponse) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: interviewId, currentQuestion, userResponse'
+      });
+    }
+
+    const nextQuestion = await followupService.generateFollowupQuestion(
+      interviewId,
+      currentQuestion,
+      userResponse
+    );
+
+    res.status(200).json({
+      success: true,
+      followup_question: nextQuestion
+    });
+  } catch (error: any) {
+    console.error('❌ Error generating follow-up:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate follow-up question',
+      error: error.message
+    });
+  }
+};
 
 export const getAllFollowups = async (req: any, res: any) => {
   try {

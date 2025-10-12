@@ -4,7 +4,8 @@ import {
   getFollowupsByInterviewId,
   createFollowup,
   updateFollowup,
-  deleteFollowup
+  deleteFollowup,
+  generateFollowup
 } from '../controllers/followup.controller';
 
 const router = express.Router();
@@ -13,6 +14,7 @@ const router = express.Router();
 router.get('/', getAllFollowups);
 router.get('/interview/:interviewId', getFollowupsByInterviewId);
 router.post('/', createFollowup);
+router.post('/generate', generateFollowup);
 router.put('/:id', updateFollowup);
 router.delete('/:id', deleteFollowup);
 
