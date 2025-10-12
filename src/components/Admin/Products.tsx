@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ProductForInsight } from '../../types';
+import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9999/api';
 
@@ -18,9 +19,9 @@ const Admin: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE_URL}/products`);
-        if (!res.ok) throw new Error('Failed to fetch products');
-        const json = await res.json();
+        const res = await axios.get(`${API_BASE_URL}/products`);
+        if (res.status !== 200) throw new Error('Failed to fetch products');
+        const json = res.data;
 
         const normalized: ProductForInsight[] = json.data.map((prod: any) => ({
           id: prod._id,
