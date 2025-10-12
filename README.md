@@ -13,7 +13,6 @@ A React TypeScript frontend application for conducting AI-powered qualitative ma
 - 🐳 **Dockerized**: Full containerized deployment with Docker Compose
 
 ## Tech Stack
-
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS
@@ -225,5 +224,6 @@ MIT License - see LICENSE file for details.
 ## Support
 
 For support and questions, please open an issue in the repository.
+
 
 
