@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import type { ProductForInsight } from '../../types';
 import ProductInsightPage from './ProductInsight';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9999/api';
+
 // --- SVG ICONS ---
 const BoxIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -73,7 +75,7 @@ const InsightPage: React.FC = () => {
     const fetchInterviews = async () => {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:9999/api/interviews');
+        const res = await fetch(`${API_BASE_URL}/interviews`);
         if (!res.ok) throw new Error('Failed to fetch interviews');
         const result = await res.json();
         console.log('Fetched interviews:', result);
@@ -103,7 +105,7 @@ const InsightPage: React.FC = () => {
 
             // --- Fetch user ---
             try {
-              const userRes = await fetch(`http://localhost:9999/api/users/${interview.user}`);
+              const userRes = await fetch(`${API_BASE_URL}/users/${interview.user}`);
               if (userRes.ok) {
                 const userData = await userRes.json();
                 userName =
@@ -118,7 +120,7 @@ const InsightPage: React.FC = () => {
 
             // --- Fetch product ---
             try {
-              const prodRes = await fetch(`http://localhost:9999/api/products/${interview.product}`);
+              const prodRes = await fetch(`${API_BASE_URL}/products/${interview.product}`);
               if (prodRes.ok) {
                 const prodData = await prodRes.json();
                 productName =

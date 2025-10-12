@@ -6,6 +6,8 @@ import FollowupLoadingAnimation from './FollowupLoadingAnimation';
 import { interviewService } from '../../services/interviewService';
 import type { AvatarState } from '../../types';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9999/api';
+
 interface InterviewQuestion {
   id: string;
   question: string;
@@ -143,7 +145,7 @@ const InterviewPage: React.FC = () => {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await fetch('http://localhost:9999/api/stdiq', {
+        const res = await fetch(`${API_BASE_URL}/stdiq`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -393,7 +395,7 @@ const InterviewPage: React.FC = () => {
         responses: userResponses
       };
 
-      const res = await fetch('http://localhost:9999/api/stdiqres', {
+      const res = await fetch(`${API_BASE_URL}/stdiqres`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

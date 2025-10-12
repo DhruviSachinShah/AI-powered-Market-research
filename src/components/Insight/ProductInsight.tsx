@@ -4,6 +4,8 @@ import { Chart, ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Leg
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9999/api';
+
 interface ProductInsightPageProps {
   productId: string;
 }
@@ -16,7 +18,7 @@ const ProductInsightPage: React.FC<ProductInsightPageProps> = ({ productId }) =>
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`http://localhost:9999/api/product-insights/${productId}`, {
+        const res = await fetch(`${API_BASE_URL}/product-insights/${productId}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });

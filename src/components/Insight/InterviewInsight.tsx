@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9999/api';
+
 interface InsightItem {
   category: string;
   insight: string;
@@ -47,7 +49,7 @@ const InterviewInsightsPage: React.FC = () => {
       setError('');
       try {
         const response = await axios.get(
-          `http://localhost:9999/api/interview-insights/${id}`
+          `${API_BASE_URL}/interview-insights/${id}`
         );
 
         const data = response.data.data;

@@ -1,12 +1,14 @@
 
 import type { ApiResponse } from '../types';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9999/api';
+
 class InterviewService {
 
   // Generate follow-up question
   async generateFollowupQuestion(interviewId: string, currentQuestion: string, userResponse: string): Promise<ApiResponse<{ followup_question: string }>> {
     try {
-      const response = await fetch('http://localhost:9999/api/followups/generate', {
+      const response = await fetch(`${API_BASE_URL}/followups/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
