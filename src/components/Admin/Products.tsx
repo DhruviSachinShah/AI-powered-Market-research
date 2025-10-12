@@ -127,9 +127,8 @@ const Admin: React.FC = () => {
               </h1>
               <p className="text-gray-600 text-lg">Manage your product catalog and view insights</p>
             </div>
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg px-8 py-4 text-white">
-              <div className="text-sm opacity-90">Total Products</div>
-              <div className="text-3xl font-bold">{products.length}</div>
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg px-6 py-4 text-white text-sm opacity-90">
+              Products : {products.length}
             </div>
           </div>
         </div>

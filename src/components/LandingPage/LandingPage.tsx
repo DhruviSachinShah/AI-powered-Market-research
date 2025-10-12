@@ -7,20 +7,20 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between px-6 lg:px-8 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center glow-primary">
-            <img src={iconLogo} className="w-6 h-6 text-white" />
+      <nav className="relative z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center glow-primary">
+            <img src={iconLogo} className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
           </div>
-          <span className="font-bold text-xl">InsightAi</span>
+          <span className="font-bold text-lg sm:text-xl">InsightAi</span>
         </div>
-        <div className="flex items-center gap-4">
-          <Link to="/products" className="hidden sm:block text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link to="/products" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-gray-100">
             Products
           </Link>
           <Link 
             to="/admin" 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:scale-105 text-white px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:scale-105 text-white px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/30"
           >
             Admin Panel
           </Link>
