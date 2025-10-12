@@ -46,7 +46,7 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({
   const [error, setError] = useState<string | null>(null);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
 
   useEffect(() => {

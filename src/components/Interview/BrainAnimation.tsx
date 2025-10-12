@@ -29,8 +29,9 @@ interface NeuralConnection {
 
 const BrainAnimation: React.FC<BrainAnimationProps> = ({ avatarState }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const animationRef = useRef<number | null>(null);
+  const particlesRef = useRef<Particle[]>([]);
+  // Removed unused particles state - using particlesRef instead
   const [neuralConnections, setNeuralConnections] = useState<NeuralConnection[]>([]);
   const [brainNodes, setBrainNodes] = useState<Array<{ x: number; y: number; size: number; pulse: number }>>([]);
 
@@ -90,7 +91,8 @@ const BrainAnimation: React.FC<BrainAnimationProps> = ({ avatarState }) => {
           : `hsl(${180 + Math.random() * 40}, 50%, 50%)` // Teal to blue
       });
     }
-    setParticles(newParticles);
+    // Update particles ref directly
+    particlesRef.current = newParticles; // Update ref for animation loop
   }, [avatarState.isSpeaking, avatarState.isListening]);
 
   // Animation loop
@@ -172,35 +174,33 @@ const BrainAnimation: React.FC<BrainAnimationProps> = ({ avatarState }) => {
         ctx.fill();
       });
 
-      // Update and draw particles
-      setParticles(prevParticles => 
-        prevParticles.map(particle => {
-          let newX = particle.x + particle.vx;
-          let newY = particle.y + particle.vy;
+      // Update and draw particles (using ref to avoid infinite loop)
+      particlesRef.current = particlesRef.current.map(particle => {
+        let newX = particle.x + particle.vx;
+        let newY = particle.y + particle.vy;
 
-          // Bounce off edges
-          if (newX <= 0 || newX >= 1) particle.vx *= -1;
-          if (newY <= 0 || newY >= 1) particle.vy *= -1;
+        // Bounce off edges
+        if (newX <= 0 || newX >= 1) particle.vx *= -1;
+        if (newY <= 0 || newY >= 1) particle.vy *= -1;
 
-          // Keep particles in bounds
-          newX = Math.max(0, Math.min(1, newX));
-          newY = Math.max(0, Math.min(1, newY));
+        // Keep particles in bounds
+        newX = Math.max(0, Math.min(1, newX));
+        newY = Math.max(0, Math.min(1, newY));
 
-          // Draw particle
-          ctx.beginPath();
-          ctx.arc(newX * width, newY * height, particle.size, 0, Math.PI * 2);
-          ctx.fillStyle = particle.color;
-          ctx.globalAlpha = particle.opacity;
-          ctx.fill();
-          ctx.globalAlpha = 1;
+        // Draw particle
+        ctx.beginPath();
+        ctx.arc(newX * width, newY * height, particle.size, 0, Math.PI * 2);
+        ctx.fillStyle = particle.color;
+        ctx.globalAlpha = particle.opacity;
+        ctx.fill();
+        ctx.globalAlpha = 1;
 
-          return {
-            ...particle,
-            x: newX,
-            y: newY
-          };
-        })
-      );
+        return {
+          ...particle,
+          x: newX,
+          y: newY
+        };
+      });
 
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -212,7 +212,7 @@ const BrainAnimation: React.FC<BrainAnimationProps> = ({ avatarState }) => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [avatarState, neuralConnections, brainNodes, particles]);
+  }, [avatarState, neuralConnections, brainNodes]); // Removed particles from dependencies
 
   return (
     <div className="w-full h-full relative flex items-center justify-center">

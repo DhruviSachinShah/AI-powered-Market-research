@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkipForward, RotateCcw, Volume2, VolumeX, Settings, Mic, StopCircle, Check, Clock, User, Award, ChevronRight, X } from 'lucide-react';
 import BrainAnimation from './BrainAnimation';
+import FollowupLoadingAnimation from './FollowupLoadingAnimation';
+import { interviewService } from '../../services/interviewService';
 import type { AvatarState } from '../../types';
 
 interface InterviewQuestion {
@@ -10,6 +12,8 @@ interface InterviewQuestion {
   type: string;
   category: string;
   expectedDuration: number;
+  isFollowup?: boolean;
+  parentQuestionId?: string;
 }
 
 interface InterviewResponse {
@@ -46,6 +50,8 @@ const InterviewPage: React.FC = () => {
   const [speechRate, setSpeechRate] = useState(1);
   const [speechVolume, setSpeechVolume] = useState(0.8);
   const [userResponses, setUserResponses] = useState<Record<string, string>>({});
+  const [isGeneratingFollowup, setIsGeneratingFollowup] = useState(false);
+  const [interviewId] = useState("68ea61293cd7cfcca8c39a5b");
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
 
@@ -254,8 +260,11 @@ const InterviewPage: React.FC = () => {
     }
   };
 
-  const handleNextQuestion = () => {
-    if (currentTranscript.trim() && session) {
+  const handleNextQuestion = async () => {
+    if (!session) return;
+
+    // Save current response
+    if (currentTranscript.trim()) {
       const questionId = session.questions[currentQuestionIndex].id;
       setUserResponses(prev => ({
         ...prev,
@@ -263,18 +272,85 @@ const InterviewPage: React.FC = () => {
       }));
     }
 
-    if (currentQuestionIndex < fallbackQuestions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+    const currentQuestion = session.questions[currentQuestionIndex];
+    const currentResponse = currentTranscript.trim();
+
+    // Check if this is a standard question (not a follow-up) and we have a response
+    if (!currentQuestion.isFollowup && currentResponse) {
+      // Generate follow-up question
+      setIsGeneratingFollowup(true);
+      
+      try {
+        const followupResponse = await interviewService.generateFollowupQuestion(
+          interviewId,
+          currentQuestion.question,
+          currentResponse
+        );
+
+        if (followupResponse.success && followupResponse.data?.followup_question) {
+          // Add follow-up question to the session
+          const followupQuestion: InterviewQuestion = {
+            id: `followup_${currentQuestion.id}_${Date.now()}`,
+            question: followupResponse.data.followup_question,
+            type: 'followup',
+            category: 'Follow-up',
+            expectedDuration: 90,
+            isFollowup: true,
+            parentQuestionId: currentQuestion.id
+          };
+
+          // Insert follow-up question after current question
+          const updatedQuestions = [
+            ...session.questions.slice(0, currentQuestionIndex + 1),
+            followupQuestion,
+            ...session.questions.slice(currentQuestionIndex + 1)
+          ];
+
+          setSession({
+            ...session,
+            questions: updatedQuestions
+          });
+
+          // Move to the follow-up question
+          setCurrentQuestionIndex(prev => prev + 1);
+          setCurrentTranscript('');
+          stopSpeaking();
+        } else {
+          // If follow-up generation fails, move to next standard question
+          moveToNextStandardQuestion();
+        }
+      } catch (error) {
+        console.error('Error generating follow-up question:', error);
+        // If follow-up generation fails, move to next standard question
+        moveToNextStandardQuestion();
+      } finally {
+        setIsGeneratingFollowup(false);
+      }
+    } else {
+      // For follow-up questions or when no response, move to next standard question
+      moveToNextStandardQuestion();
+    }
+  };
+
+  const moveToNextStandardQuestion = () => {
+    if (!session) return;
+
+    // Find next standard question (not follow-up)
+    const nextStandardIndex = session.questions.findIndex(
+      (q, index) => index > currentQuestionIndex && !q.isFollowup
+    );
+
+    if (nextStandardIndex !== -1) {
+      setCurrentQuestionIndex(nextStandardIndex);
       setCurrentTranscript('');
       stopSpeaking();
     } else {
-      if (session) {
-        setSession({
-          ...session,
-          status: 'completed',
-          endTime: new Date()
-        });
-      }
+      // No more standard questions, complete the interview
+      setSession({
+        ...session,
+        status: 'completed',
+        endTime: new Date()
+      });
     }
   };
 
@@ -345,7 +421,12 @@ const InterviewPage: React.FC = () => {
   }
 
   const currentQuestion = session.questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / session.questions.length) * 100;
+  
+  // Calculate progress based on standard questions only
+  const standardQuestions = session.questions.filter(q => !q.isFollowup);
+  const currentStandardIndex = standardQuestions.findIndex(q => q.id === currentQuestion.id);
+  const progress = ((currentStandardIndex + 1) / standardQuestions.length) * 100;
+  
   const isCompleted = session.status === 'completed';
 
   return (
@@ -365,7 +446,10 @@ const InterviewPage: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <Clock className="w-3 h-3 text-gray-500" />
                   <p className="text-xs text-gray-600">
-                    Question {currentQuestionIndex + 1} of {session.questions.length}
+                    Question {currentStandardIndex + 1} of {standardQuestions.length}
+                    {currentQuestion.isFollowup && (
+                      <span className="ml-1 text-blue-600 font-medium">(Follow-up)</span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -541,8 +625,8 @@ const InterviewPage: React.FC = () => {
                     onClick={handleNextQuestion}
                     className="flex flex-col items-center justify-center space-y-1 px-3 py-3 bg-gradient-to-br from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl transition-all duration-200 font-medium shadow-md"
                   >
-                    {currentQuestionIndex === session.questions.length - 1 ? <Check className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    <span className="text-xs">{currentQuestionIndex === session.questions.length - 1 ? 'Finish' : 'Next'}</span>
+                    {currentStandardIndex === standardQuestions.length - 1 && !currentQuestion.isFollowup ? <Check className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    <span className="text-xs">{currentStandardIndex === standardQuestions.length - 1 && !currentQuestion.isFollowup ? 'Finish' : 'Next'}</span>
                   </motion.button>
                 </div>
               </motion.div>
@@ -628,6 +712,9 @@ const InterviewPage: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Follow-up Loading Animation */}
+      <FollowupLoadingAnimation isVisible={isGeneratingFollowup} />
 
       {/* Settings Modal - Compact */}
       <AnimatePresence>

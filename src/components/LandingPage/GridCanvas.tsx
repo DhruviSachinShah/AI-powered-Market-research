@@ -14,15 +14,14 @@ export const GridCanvas = () => {
     // Grid settings
     const BLOCK_SIZE = 24;
     const STROKE_COLOR = "rgba(156, 163, 175, 0.4)"; // More subtle gray
-    const BASE_FILL = "transparent"; // Transparent background
+    // Removed unused BASE_FILL variable
     const GRID_HIGHLIGHT = "rgba(156, 163, 175, 0.2)"; // Very subtle highlight for intersections
 
     // Effect settings (3 phases with smooth transitions)
     const PHASE_DURATION = 200;
     const EFFECT_DURATION = 800; // Longer duration for more appeal
     const colorA = "#3b82f6"; // Vibrant blue for checkerboard
-    const colorB = "#ec4899"; // Bright pink for final fill
-    const colorC = "#8b5cf6"; // Purple intermediate
+    // Removed unused color variables
 
     const effects = effectsRef.current;
 
@@ -92,20 +91,7 @@ export const GridCanvas = () => {
       }
     };
 
-    // Draw diagonal dither pattern
-    const drawDiagonalDither = (x: number, y: number) => {
-      const miniSize = BLOCK_SIZE / 15;
-      for (let i = 0; i < 15; i++) {
-        for (let j = 0; j < 15; j++) {
-          if ((i + j) % 3 === 0) {
-            ctx.fillStyle = STROKE_COLOR;
-          } else {
-            ctx.fillStyle = BASE_FILL;
-          }
-          ctx.fillRect(x + j * miniSize, y + i * miniSize, miniSize, miniSize);
-        }
-      }
-    };
+    // Removed unused drawDiagonalDither function
 
     // Draw effect on a cell with smooth color transitions
     const drawEffect = (col: number, row: number, dt: number) => {

@@ -1,99 +1,37 @@
-import type { InterviewSession } from '../types';
+
+import type { ApiResponse } from '../types';
 
 class InterviewService {
-  // Get all interviews
-  async getAllInterviews(): Promise<ApiResponse<Interview[]>> {
-    try {
-      const response = await api.get('/interviews');
-      return response.data;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to fetch interviews',
-        data: undefined
-      };
-    }
-  }
 
-  // Get interview by ID
-  async getInterviewById(interviewId: string): Promise<ApiResponse<Interview>> {
+  // Generate follow-up question
+  async generateFollowupQuestion(interviewId: string, currentQuestion: string, userResponse: string): Promise<ApiResponse<{ followup_question: string }>> {
     try {
-      const response = await api.get(`/interviews/${interviewId}`);
-      return response.data;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to fetch interview',
-        data: undefined
-      };
-    }
-  }
+      const response = await fetch('http://localhost:9999/api/followups/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          interviewId,
+          currentQuestion,
+          userResponse
+        }),
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      });
 
-  // Get interviews by user ID
-  async getInterviewsByUser(userId: string): Promise<ApiResponse<Interview[]>> {
-    try {
-      const response = await api.get(`/interviews/user/${userId}`);
-      return response.data;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to fetch user interviews',
-        data: undefined
-      };
-    }
-  }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-  // Get interviews by product ID
-  async getInterviewsByProduct(productId: string): Promise<ApiResponse<Interview[]>> {
-    try {
-      const response = await api.get(`/interviews/product/${productId}`);
-      return response.data;
-    } catch (error: any) {
+      const data = await response.json();
       return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to fetch product interviews',
-        data: undefined
+        success: data.success,
+        data: { followup_question: data.followup_question }
       };
-    }
-  }
-
-  // Create new interview
-  async createInterview(interviewData: Omit<Interview, '_id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Interview>> {
-    try {
-      const response = await api.post('/interviews', interviewData);
-      return response.data;
     } catch (error: any) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Failed to create interview',
-        data: undefined
-      };
-    }
-  }
-
-  // Update interview by ID
-  async updateInterview(interviewId: string, interviewData: Partial<Omit<Interview, '_id' | 'createdAt' | 'updatedAt'>>): Promise<ApiResponse<Interview>> {
-    try {
-      const response = await api.put(`/interviews/${interviewId}`, interviewData);
-      return response.data;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to update interview',
-        data: undefined
-      };
-    }
-  }
-
-  // Delete interview by ID
-  async deleteInterview(interviewId: string): Promise<ApiResponse<{ message: string }>> {
-    try {
-      const response = await api.delete(`/interviews/${interviewId}`);
-      return response.data;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to delete interview',
+        message: error.message || 'Failed to generate follow-up question',
         data: undefined
       };
     }
