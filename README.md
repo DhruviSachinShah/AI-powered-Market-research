@@ -1,37 +1,40 @@
-# AI-Driven Qualitative Market Research Platform - Backend
+# AI-Driven Qualitative Market Research Platform - Frontend
 
-A Node.js backend service for conducting AI-powered qualitative market research interviews using OpenAI GPT-4, MongoDB, and Socket.io for real-time communication.
+A React TypeScript frontend application for conducting AI-powered qualitative market research interviews with real-time chat interface and comprehensive analytics dashboard.
 
 ## Features
 
-- 🤖 **AI-Powered Interviews**: GPT-4 conducts natural conversations with adaptive questioning
-- 📊 **Real-time Analysis**: Responses are analyzed for relevance, depth, consistency, and sentiment
-- 🔄 **Follow-up Questions**: AI automatically probes deeper when responses are vague or incomplete
-- 📈 **Analytics API**: Comprehensive insights and scoring breakdowns
-- 🚀 **Real-time Communication**: WebSocket-based chat interface
+- 🤖 **AI-Powered Interviews**: Real-time chat interface with GPT-4
+- 📊 **Analytics Dashboard**: Comprehensive insights and scoring breakdowns
+- 🔄 **Real-time Communication**: WebSocket-based chat interface
+- 📈 **Data Visualization**: Charts and graphs using Recharts
+- 🎨 **Modern UI**: Built with Tailwind CSS and custom components
+- 🚀 **Responsive Design**: Works on desktop and mobile devices
 - 🐳 **Dockerized**: Full containerized deployment with Docker Compose
 
 ## Tech Stack
-
-- **Runtime**: Node.js with TypeScript
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose ODM
-- **Real-time**: Socket.io for WebSocket communication
-- **AI**: OpenAI GPT-4 via LangChain
-- **Deployment**: Docker, Docker Compose
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **State Management**: Zustand
+- **Real-time**: Socket.io-client
+- **Charts**: Recharts
+- **HTTP Client**: Axios
+- **Routing**: React Router DOM
+- **Deployment**: Docker, Nginx
 
 ## Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose
-- OpenAI API key
+- Backend API running on port 5000
 
 ### Setup
 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd market-research-backend
+   cd market-research-frontend
    ```
 
 2. **Create environment file**
@@ -39,10 +42,11 @@ A Node.js backend service for conducting AI-powered qualitative market research 
    cp .env.example .env
    ```
 
-3. **Add your OpenAI API key**
+3. **Configure API endpoints**
    ```bash
    # Edit .env file
-   OPENAI_API_KEY=sk-your-openai-api-key-here
+   VITE_API_URL=http://localhost:5000
+   VITE_SOCKET_URL=http://localhost:5000
    ```
 
 4. **Start the application**
@@ -51,73 +55,116 @@ A Node.js backend service for conducting AI-powered qualitative market research 
    ```
 
 5. **Access the application**
-   - Backend API: http://localhost:5000
-   - MongoDB: mongodb://localhost:27017
-   - Health Check: http://localhost:5000/health
-
-## API Endpoints
-
-### Interviews
-- `GET /api/interviews` - Get all interviews
-- `GET /api/interviews/:id` - Get interview by ID
-- `GET /api/interviews/email/:email` - Get interviews by email
-- `POST /api/interviews` - Create new interview
-- `PUT /api/interviews/:id` - Update interview
-- `DELETE /api/interviews/:id` - Delete interview
-
-### Analytics
-- `GET /api/analytics/interview/:id` - Get interview analytics
-- `GET /api/analytics/aggregate` - Get aggregate analytics
-- `GET /api/analytics/template/:templateId` - Get template analytics
-- `GET /api/analytics/export/:id` - Export interview data
-
-### Health
-- `GET /health` - Health check endpoint
-
-## Socket Events
-
-### Client to Server
-- `start-interview` - Start new interview
-- `user-response` - Send user response
-- `follow-up-response` - Send follow-up response
-- `end-interview` - End interview
-
-### Server to Client
-- `question` - Receive new question
-- `follow-up-question` - Receive follow-up question
-- `interview-complete` - Interview completed
-- `interview-ended` - Interview ended
-- `error` - Error occurred
+   - Frontend: http://localhost:3000
 
 ## Development
 
 ### Local Development
 
-1. **Start MongoDB**
-   ```bash
-   docker compose up mongodb
-   ```
-
-2. **Start Backend**
+1. **Install dependencies**
    ```bash
    npm install
+   ```
+
+2. **Start development server**
+   ```bash
    npm run dev
    ```
+
+3. **Access the application**
+   - Frontend: http://localhost:5173
 
 ### Environment Variables
 
 ```bash
-PORT=5000
-MONGODB_URI=mongodb://admin:admin123@mongodb:27017/market_research?authSource=admin
-OPENAI_API_KEY=your_openai_api_key_here
-NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
+VITE_API_URL=http://localhost:5000
+VITE_SOCKET_URL=http://localhost:5000
 ```
+
+## Project Structure
+
+```
+frontend/
+├── src/
+│   ├── components/     # React components
+│   │   ├── Interview/  # Interview flow components
+│   │   ├── Dashboard/  # Analytics dashboard
+│   │   └── ui/         # Reusable UI components
+│   ├── stores/         # Zustand state management
+│   ├── services/       # API and Socket services
+│   ├── types/          # TypeScript type definitions
+│   ├── App.tsx         # Main app component
+│   └── main.tsx        # Entry point
+├── Dockerfile
+├── docker-compose.yml
+├── nginx.conf
+└── package.json
+```
+
+## Components
+
+### Interview Components
+- **InterviewPage**: Main interview interface
+- **ChatInterface**: Real-time chat display
+- **ResponseInput**: User input form
+
+### Dashboard Components
+- **DashboardPage**: Overview of all interviews
+- **ResultsPage**: Detailed interview results and analytics
+
+### UI Components
+- **Button**: Customizable button component
+- **Card**: Container component
+- **Input**: Form input component
+- **Textarea**: Multi-line input component
+- **LoadingSpinner**: Loading indicator
+
+## State Management
+
+The application uses Zustand for state management with the following store:
+
+```typescript
+interface InterviewState {
+  currentInterview: IInterview | null;
+  messages: IMessage[];
+  isConnected: boolean;
+  isInterviewActive: boolean;
+  isLoading: boolean;
+  error: string | null;
+  // ... actions
+}
+```
+
+## API Integration
+
+### REST API
+- **ApiService**: Handles HTTP requests to backend
+- **Endpoints**: Interviews, analytics, health checks
+
+### WebSocket
+- **SocketService**: Manages real-time communication
+- **Events**: Interview flow, questions, responses
+
+## Routing
+
+The application uses React Router with the following routes:
+
+- `/` - Landing page
+- `/interview/:id` - Active interview interface
+- `/results/:id` - Post-interview analytics
+- `/dashboard` - Interview dashboard
+
+## Styling
+
+- **Tailwind CSS**: Utility-first CSS framework
+- **Custom Components**: Reusable UI components
+- **Responsive Design**: Mobile-first approach
+- **Dark/Light Mode**: Theme support (future enhancement)
 
 ## Docker Commands
 
 ```bash
-# Start all services
+# Start application
 docker compose up
 
 # Start in background
@@ -129,97 +176,42 @@ docker compose logs -f
 # Stop services
 docker compose down
 
-# Stop and remove volumes
-docker compose down -v
-
-# Rebuild specific service
-docker compose up -d --build backend
+# Rebuild
+docker compose up --build
 ```
 
-## Project Structure
+## Build Process
 
-```
-backend/
-├── src/
-│   ├── models/         # MongoDB schemas
-│   ├── services/       # AI & scoring services
-│   ├── controllers/    # API controllers
-│   ├── routes/         # Express routes
-│   ├── socket/         # Socket.io handlers
-│   ├── config/         # Configuration
-│   └── server.ts       # Main server file
-├── Dockerfile
-├── docker-compose.yml
-├── mongo-init.js
-└── package.json
+### Development
+```bash
+npm run dev
 ```
 
-## Scoring Algorithm
-
-Each response is scored on four dimensions:
-
-- **Relevance (40%)**: How well the response addresses the question
-- **Depth (25%)**: Level of detail and specificity
-- **Consistency (20%)**: Alignment with previous responses
-- **Sentiment Alignment (15%)**: Match with expected sentiment
-
-## AI Capabilities
-
-- **Natural Conversation**: GPT-4 conducts human-like interviews
-- **Context Awareness**: Remembers previous answers and adapts questions
-- **Adaptive Probing**: Generates follow-up questions based on response quality
-- **Real-time Analysis**: Analyzes responses as they come in
-- **Intelligent Questioning**: Uses different probing strategies (depth, clarification, examples, comparison)
-
-## Database Schema
-
-### Interview Schema
-```typescript
-{
-  _id: ObjectId,
-  respondentName: string,
-  respondentEmail: string,
-  templateId: ObjectId,
-  status: 'in-progress' | 'completed' | 'abandoned',
-  startedAt: Date,
-  completedAt: Date?,
-  responses: [ResponseSchema],
-  overallScore: number,
-  insights: {
-    keyThemes: string[],
-    sentiment: 'positive' | 'neutral' | 'negative',
-    completionRate: number
-  },
-  metadata: {
-    duration: number,
-    questionCount: number,
-    followUpCount: number
-  }
-}
+### Production
+```bash
+npm run build
 ```
 
-### Response Schema
-```typescript
-{
-  questionId: string,
-  questionText: string,
-  questionType: 'initial' | 'follow-up',
-  userAnswer: string,
-  aiProbe: string?,
-  scores: {
-    relevance: number,
-    depth: number,
-    consistency: number,
-    sentimentAlignment: number,
-    composite: number
-  },
-  vectorEmbedding: number[],
-  timestamp: Date
-}
+### Preview
+```bash
+npm run preview
 ```
+
+## Performance Optimization
+
+- **Code Splitting**: Lazy loading of components
+- **Bundle Optimization**: Vite's built-in optimizations
+- **Image Optimization**: Optimized assets
+- **Caching**: Nginx caching for static assets
+
+## Browser Support
+
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
 
 ## Contributing
-
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
@@ -227,9 +219,11 @@ Each response is scored on four dimensions:
 5. Submit a pull request
 
 ## License
-
 MIT License - see LICENSE file for details.
 
 ## Support
 
 For support and questions, please open an issue in the repository.
+
+
+

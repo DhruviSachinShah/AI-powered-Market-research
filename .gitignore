@@ -1,40 +1,29 @@
-# Node modules
-node_modules/
-.pnp/
+# dependencies
+/node_modules
+/.pnp
 .pnp.js
 
-# Build output
-dist/
-build/
-out/
-coverage/
+# testing
+/coverage
 
-# TypeScript cache
-*.tsbuildinfo
+# production
+/build
+/dist
 
-# Environment files
-.env
-.env.*
-!.env.example
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Logs
+# Log files
 npm-debug.log*
 yarn-debug.log*
+yarn-error.log*
 pnpm-debug.log*
-logs
-*.log
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE/editor settings
+# Editor directories and files
 .vscode/
 .idea/
 *.suo
@@ -43,25 +32,22 @@ Thumbs.db
 *.sln
 *.sw?
 
+# Local environment
+.env
+.env.*
+!.env.example
+
 # Temporary files
-tmp/
-temp/
 *.tmp
+*.temp
 
-# Docker
-docker-compose.override.yml
-.docker/
-Dockerfile.dev
+# TypeScript
+*.tsbuildinfo
 
-# Debugging
-*.local
-*.bak
+# Mac system files
+.DS_Store
 
-# Test coverage
-coverage/
-.nyc_output/
-
-# Miscellaneous
-.cache/
-.eslintcache
-.prettier-cache/
+# Optional: if using vite or next.js
+.vite
+.next
+out
