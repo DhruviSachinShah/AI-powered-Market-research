@@ -5,33 +5,26 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY tsconfig.json ./
 
 # Install dependencies
 RUN npm ci
 
 # Copy source code
-COPY src ./src
+COPY . .
 
-# Build TypeScript
+# Build for production
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine
+# Production stage with nginx
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy built files
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy package files
-COPY package*.json ./
-
-# Install production dependencies only
-RUN npm ci --only=production
-
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
-EXPOSE 5000
+EXPOSE 80
 
-# Start application
-CMD ["node", "dist/server.js"]
+CMD ["nginx", "-g", "daemon off;"]
